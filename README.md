@@ -24,6 +24,14 @@ Run `optimize_roster.py` on the terminal in \*nix without any additional argumen
 
 See `optimize_roster.py -h` for the specific parameters which may be adjusted on the command line.
 
+### Algorithm
+
+The optimization problem is a sort of knapsack problem with a slew of constraints. Check the source for the specific constraints involved.
+
+The value of each person is basically their average fantasy points per ESPN's stats. Fantasy points are doubled for the player you select as captain, and this is accounted for in searching for an optimal solution.
+
+In addition, it is generally the case that bench players do not earn you many more points. Of course, they could, but their is no way to know that now. The program accounts for this by considering the fantasy points from a bench player as a fraction of their average points. You can adjust what fraction this should be, by default it is 1/10. A smaller fraction will mean less money is spent on bench players.
+
 ### Output
 
 There will be a mess of status messages while the program is running.
@@ -61,7 +69,7 @@ The script accesses the same endpoint on ESPN's servers that they use to display
 
 Four requests are made to the ESPN server every time the script is run. Do not use remote data for development purposes.
 
-## Credit
+## Credits
 All things in this repo are by Joe Nudell. See 3rd party libraries for their own respective authors and contributors, of which there are many.
 
 ## License
