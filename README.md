@@ -8,7 +8,7 @@ This application attempts to optimize the roster of a fantasy English Premier Le
 ##Requirements
 [OpenOpt](http://openopt.org/), with `pip install openopt`
 
-[GLPK (4.48)][http://www.gnu.org/software/glpk/]. Build with GMP support enabledby running `./configure --with-gmp` first.
+[GLPK \(4.48\)][http://www.gnu.org/software/glpk/]. Build with GMP support enabledby running `./configure --with-gmp` first.
 
 [CVXOPT](http://cvxopt.org/). Build with GLPK linked by making sure `setup.py` has `BUILD_GLPK = 1`. Also make sure that `GLPK_LIB_DIR` and `GLPK_INC_DIR` point to the correct places, which you'll have to determine by looking at the end of the output of GLPK's build messages.
 
@@ -23,6 +23,31 @@ Note you may need to run every install command as `sudo`.
 Run `optimize_roster.py` on the terminal in \*nix without any additional arguments to get a basic team.
 
 See `optimize_roster.py -h` for the specific parameters which may be adjusted on the command line.
+
+##Output
+
+    First Name     Last Name      Position       Starting      Capt. Club Salary 
+    ---            ---            ---            ---            ---  ---  ---    
+    Robin          Van Persie     forward        starter             MUN  10.0   
+    Luis           Suárez         forward        starter             LIV  9.3    
+    Luke           Moore          forward        sub                 SWC  4.4    
+    Gareth         Bale           midfielder     starter             TOT  9.6    
+    Theo           Walcott        midfielder     starter             ARS  8.3    
+    Frank          Lampard        midfielder     starter             CHL  8.1    
+    Michu                         midfielder     starter             SWC  7.7    
+    Jordan         Ibe            midfielder     starter             LIV  4.9    
+    John           Terry          defender       starter             CHL  6.8    
+    Nacho          Monreal        defender       starter             ARS  6.5    
+    Sebastien      Bassong        defender       sub                 NOR  5.5    
+    Alexander      Büttner        defender       starter         X   MUN  5.0    
+    Steven         Whittaker      defender       sub                 NOR  4.7    
+    Mark           Schwarzer      keeper         starter             CHL  4.5    
+    Lukasz         Fabianski      keeper         sub                 ARS  4.5    
+
+    Total Cost: £ 99.8 M
+    Under budget:   £ 0.2 M
+
+
 
 ##Remote Stats
 
