@@ -61,7 +61,10 @@ The script accesses the same endpoint on ESPN's servers that they use to display
 
 Four requests are made to the ESPN server every time the script is run. Do not use remote data for development purposes.
 
-## Credits, License
+## Credit
+All things in this repo are by Joe Nudell. See 3rd party libraries for their own respective authors and contributors, of which there are many.
+
+## License
 Copyright &copy; 2013, Joe Nudell
 
 All rights reserved.
@@ -89,3 +92,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 The views and conclusions contained in the software and documentation are those
 of the authors and should not be interpreted as representing official policies, 
 either expressed or implied, of the FreeBSD Project.
+
+See 3rd party libraries for their own licenses, which may differ from this one.
