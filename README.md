@@ -30,7 +30,7 @@ The optimization problem is a sort of knapsack problem with a slew of constraint
 
 The value of each person is basically their average fantasy points per ESPN's stats. Fantasy points are doubled for the player you select as captain, and this is accounted for in searching for an optimal solution.
 
-In addition, it is generally the case that bench players do not earn you many more points. Of course, they could, but their is no way to know that now. The program accounts for this by considering the fantasy points from a bench player as a fraction of their average points. You can adjust what fraction this should be, by default it is 1/10. A smaller fraction will mean less money is spent on bench players.
+In addition, it is generally the case that bench players do not earn you many more points. Of course, they could, but there is no way to know that now. The program accounts for this by considering the fantasy points from a bench player as a fraction of their average points. You can adjust what fraction this should be. By default it is 1/10. A smaller fraction will mean less money is spent on your substitutes.
 
 ### Output
 
