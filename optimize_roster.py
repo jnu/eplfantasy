@@ -1,3 +1,4 @@
+# -*-coding: utf8-*-
 '''
 optimize_roster.py 
 
@@ -11,15 +12,19 @@ the number of players (and in the right positions) and also the given budget.
 The optimization may take a while to happen, and as it is NP-Complete it does
 not always produced a guaranteed optimal solution.
 
-The output of the program will be status information and graphs while the
-search is on-going, but will ultimately result in a suggested team roster.
+The output of the program will be status information while the search is
+on-going, but will ultimately result in a suggested team roster.
 
 The team roster will contain 15 players:
 2 keepers, 5 defenders, 5 midfielders, and 3 forwards.
 
-Currently the output does NOT suggest what formation to play these players
-in, nor does it tell you who should start and who should sub. These are
-coming features.
+The algorithm will pick starters, which implicitly solves the problem of
+finding the optimal formation.
+
+The algorithm will also determine who should be captain.
+
+A few command line arguments can be use to adjust hyperparameters related to
+optimization.
 
 ---
 Joe Nudell
@@ -171,10 +176,10 @@ if __name__=='__main__':
             values['sub-forward'] + values['sub-midfielder'] \
                 + values['sub-defender'] + values['sub-keeper'] == 4,
             ##
-            #values['nItems'] == 15 # redundant now
-        )+tuple([values['id%d'%i]<=1 for i in all_ids])
+            # And now add uniqueness constraints: all pids must be unique
+        ) + tuple([values['id%d'%i]<=1 for i in all_ids])
 
-    print >>stderr,"done."
+    print >>stderr, "done."
 
 
     # Define objective: maximize score
@@ -183,7 +188,7 @@ if __name__=='__main__':
     ]
 
 
-    print >>stderr, "Solving problem ..."
+    print >>stderr, "Solving problem (may take a while) ..."
 
     # Construct problem
     p = KSP(objective, players, constraints=constraints, name='ksp_mop')
@@ -218,22 +223,23 @@ if __name__=='__main__':
             roster.append(player)
 
     # Print details about selected roster
-    row_format= "{:<15}{:<15}{:<15}{:<14}{:<6}{:<5}{:<7}"
+    row_format= u"{:<15}{:<15}{:<15}{:<14}{:^6}{:<5}{:<7}"
 
     print row_format.format('First Name',
         'Last Name', 'Position', 'Starting', 'Capt.', 'Club', 'Salary')
+    print row_format.format(*["---"]*7)
 
     total_cost = 0.
     for player in roster:
         total_cost += player['cost']
-        print row_format.format(player['fname'],
-            player['lname'], player['position'], player['bench'],
+        print row_format.format(player['fname'].decode('utf8'),
+            player['lname'].decode('utf8'), player['position'], player['bench'],
             "X" if player['captain'] else "",
             player['club'], player['cost'])
 
     print 
-    print "Total Cost:\t", total_cost, "M"
-    print "Under budget:\t", budget-total_cost, "M"
+    print u"Total Cost:\t£", total_cost, "M"
+    print u"Under budget:\t£", budget-total_cost, "M"
     print
 
 
