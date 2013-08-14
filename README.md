@@ -8,7 +8,7 @@ This application attempts to optimize the roster of a fantasy English Premier Le
 ### Requirements
 * [OpenOpt](http://openopt.org/), with `pip install openopt`
 
-* [GLPK 4.48][http://www.gnu.org/software/glpk/]. Build with GMP support enabledby running `./configure --with-gmp` first.
+* [GLPK \(4.48\)](http://www.gnu.org/software/glpk/). Build with GMP support enabledby running `./configure --with-gmp` first.
 
 * [CVXOPT](http://cvxopt.org/). Build with GLPK linked by making sure `setup.py` has `BUILD_GLPK = 1`. Also make sure that `GLPK_LIB_DIR` and `GLPK_INC_DIR` point to the correct places, which you'll have to determine by looking at the end of the output of GLPK's build messages.
 
