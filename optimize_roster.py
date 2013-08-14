@@ -147,15 +147,6 @@ if __name__=='__main__':
                 + values['sub-defender'] + values['sub-keeper'] == 4,
             values['nItems'] == 15 # redundant now
         )
-    '''
-    values = None
-    i = 0
-    def _c(v):
-        global values
-        values = v
-        return v['captain']==1 and v['forward'] > 3 and v['nItems']==15
-    constraints = _c
-    '''
 
     # Define objective: maximize score
     objective = [
