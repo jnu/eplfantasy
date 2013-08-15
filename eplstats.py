@@ -147,7 +147,8 @@ class Downloader(object):
         'aliases' : {
             'now_cost' : 'cost',
             'second_name': 'last_name',
-            'element_type_id' : 'position'
+            'element_type_id' : 'position',
+            'points_per_game' : 'average_points'
         },
         'transforms' : {
             'cost' : lambda c: c/10.,
@@ -156,7 +157,11 @@ class Downloader(object):
                 2: 'defenders',
                 3: 'midfielders',
                 4: 'forwards'
-            }[i]
+            }[i],
+            'chance_of_playing_this_round' : \
+                lambda c: c/100. if c is not None else 1.,
+            'chance_of_playing_next_round' : \
+                lambda c: c/100. if c is not None else 1.
         }
     }
 
@@ -377,6 +382,24 @@ class Downloader(object):
 
         # Now `player_data` has all the info from the website, and it
         # is well-formatted as instances of Player.
+        if adjustments is not None:
+            # Write adjustments to external file
+
+            # Find players that need adjusting
+            to_adjust = [p for p in player_data
+                            if player_data.chance_of_playing_this_round<1.]
+
+            with open(adjustments) as fh:
+                row_format = u"{:<30}{:^15}{:<35}"
+                print >>fh, row_format.format("Name", "Adjustment", "Notes")
+                for player in to_adjust:
+                    adj_name = (player.first_name + player.last_name)\
+                                .strip().encode('ascii', 'ignore')
+                    print >>fh, row_format.format(
+                        adj_name,
+                        player.chance_of_playing_this_round,
+                        player.news
+                    )
 
         # Return all players matching `position`
         position = position.lower()
@@ -421,8 +444,9 @@ class Downloader(object):
             np.club = get_by_class(row, 'span', 'player_team')
             np.cost = toFloat(get_by_class(row, 'td', 'player_cost'))
 
-            np.opponent, np.place = [f.strip(")") for f
+            _ops = [f.strip(")") for f
                 in get_by_class(row, 'span', 'player_opp').split("(")]
+            np.opponent, np.place = _ops if len(_ops)==2 else ['Unknown']*2
 
             np.cap_change = toFloat(get_by_class(row, 'td','player_capChange'))
 
