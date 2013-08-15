@@ -98,6 +98,7 @@ def get_player_stats(score='total_points',
         username=username, password=password)
 
     for position in _positions:
+        print >>stderr, "  Getting stats about %s ..." % position
         _players = downloader.get(position, source=source, season=season)
 
         for player in _players:
@@ -108,7 +109,7 @@ def get_player_stats(score='total_points',
 
             if adjustments is not None:
                 adj_id = (player.first_name + player.last_name)\
-                            .strip().encode('ascii', 'ignore')
+                            .strip().encode('ascii', 'replace')
 
                 if adj_id in adjustments:
                     adj_factor = adjustments[adj_id]
@@ -192,7 +193,7 @@ def get_player_stats(score='total_points',
 def optimize(season=2014,
     tolerance=1e-6, budget=100., bench=.1,
     adjustments=None, score="total_points", solver="glpk",
-    username='', password='', source=''):
+    username='', password='', source='espn'):
     '''Configure and run KSP solver with given parameters. Returns openopt's
     solution object'''
 
@@ -202,11 +203,11 @@ def optimize(season=2014,
         adjustments = get_injured_list(adj_file)
 
     # Get stats
-    print >>stderr, "Getting current stats from ESPN ...",
+    print >>stderr, "Getting current stats from %s ..." % source
     players = get_player_stats(season=season,
         benchfrac=bench, score=score, adjustments=adjustments,
         source=source, username=username, password=password)
-    print >>stderr, "done."
+    print >>stderr, "Finished getting stats."
 
     # Define constraints
     print >>stderr, "Defining constraints ...",
