@@ -78,7 +78,8 @@ def get_injured_list(fn, has_header=False):
 
 
 def get_player_stats(score='total_points',
-    season=2014, benchfrac=.1, adjustments=dict()):
+    season=2014, benchfrac=.1, adjustments=dict(),
+    source='espn', username='', password=''):
     '''Get all the stats from ESPN.com and format them in the manner
     expected by the optimizer.
     Params:
@@ -93,17 +94,24 @@ def get_player_stats(score='total_points',
     _id = 0
     _uid = 990000
 
+    downloader = eplstats.Downloader(source=source,
+        username=username, password=password)
+
     for position in _positions:
-        _players = eplstats.get(position, season=season)
+        _players = downloader.get(position, source=source, season=season)
 
         for player in _players:
             _id += 1
 
             # Find any external adjustment factoring to player worth
-            adj_id = p(layer.first_name + player.last_name).strip()
-            adj_factor = 1. # default - no adjustment
-            if adj_id in adjustments:
-                adj_factor = adjustments[adj_id]
+            adj_factor = 1.
+
+            if adjustments is not None:
+                adj_id = (player.first_name + player.last_name)\
+                            .strip().encode('ascii', 'ignore')
+                            
+                if adj_id in adjustments:
+                    adj_factor = adjustments[adj_id]
 
             for captain in [0, 1]:
                 for pfx in ['', 'sub-']:
@@ -183,7 +191,8 @@ def get_player_stats(score='total_points',
 
 def optimize(season=2014,
     tolerance=1e-6, budget=100., bench=.1,
-    adjustments=None, score="total_points", solver="glpk"):
+    adjustments=None, score="total_points", solver="glpk",
+    username='', password='', source=''):
     '''Configure and run KSP solver with given parameters. Returns openopt's
     solution object'''
 
@@ -195,7 +204,8 @@ def optimize(season=2014,
     # Get stats
     print >>stderr, "Getting current stats from ESPN ...",
     players = get_player_stats(season=season,
-        benchfrac=bench, score=score, adjustments=adjustments)
+        benchfrac=bench, score=score, adjustments=adjustments,
+        source=source, username=username, password=password)
     print >>stderr, "done."
 
     # Define constraints
@@ -315,6 +325,9 @@ if __name__=='__main__':
     adjustments = None
     score = "total_points"
     solver_lbl = 'glpk'  # could be interalg
+    username = ''
+    password = ''
+    source = 'espn'
 
 
     # Get CL params
@@ -334,24 +347,22 @@ if __name__=='__main__':
         help="Player stat to be used in determining player's worth")
     parser.add_argument('-S', '--solver', type=str, default=solver_lbl,
         help="Solver to use. Can be interalg or glpk, or other KSP solvers.")
+    parser.add_argument('-u', '--username', type=str, default=username,
+        help="Username (for official EPL site)")
+    parser.add_argument('-p', '--password', type=str, default=password,
+        help="Password (for official EPL site)")
+    parser.add_argument('-w', '--source', type=str, default=source,
+        help="Stats source website. ESPN and EPL are supported.")
 
     cli = parser.parse_args()
-
-    # Read CLI params back into internal vars
-    season = cli.season
-    tolerance = cli.tolerance
-    budget = cli.budget
-    bench = cli.bench
-    adjustments = cli.adjustments
-    score = cli.score
-    solver_lbl = cli.solver
 
 
 
     # Run optimizer
-    r, players = optimize(season=season, tolerance=tolerance,
-        budget=budget, bench=bench, adjustments=adjustments,
-        score=score, solver=solver_lbl)
+    r, players = optimize(season=cli.season, tolerance=cli.tolerance,
+        budget=cli.budget, bench=cli.bench, adjustments=cli.adjustments,
+        score=cli.score, solver=cli.solver, source=cli.source,
+        username=cli.username, password=cli.password)
 
     # Output raw solution from openopt solver
     print >>stderr, "Best solution found:"
@@ -362,9 +373,6 @@ if __name__=='__main__':
 
     print_results(r, players)
     
-
-
-
 
 
 
