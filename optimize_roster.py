@@ -24,7 +24,7 @@ finding the optimal formation.
 The algorithm will also determine who should be captain.
 
 A few command line arguments can be use to adjust hyperparameters related to
-optimization.
+optimization. See them with $ python optimize_roster.py -h
 
 ---
 Joe Nudell
@@ -39,9 +39,54 @@ import os
 import re
 
 
-def get_player_stats(season=2014, benchfrac=.1):
+
+def get_injured_list(fn, has_header=False):
+    if not os.path.exists(fn):
+        raise IOError("Injured list file `%s` does not exist" % fn)
+
+    disabled_list = dict()
+
+    with open(fn) as fh:
+
+        for i, line in enumerate(fh.readlines()):
+            if has_header and i==0:
+                # Skip header line
+                continue
+
+            try:
+                name, factor, notes = [t.strip() for t in t.split("  ")]
+            except Exception:
+                raise IOError("Injured list file `%s` is misformatted" % fn)
+
+            try:
+                factor = float(factor)
+            except ValueError:
+                if i==0:
+                    if not has_header:
+                        print >>stderr, \
+                        "Warning: Header detected though has_header not set"
+                    continue
+                else:
+                    raise ValueError("Can't parse %s as float" % factor)
+
+            # Store player info
+            disabled_list[name] = factor
+
+    return disabled_list
+
+
+
+
+def get_player_stats(score='total_points',
+    season=2014, benchfrac=.1, adjustments=dict()):
     '''Get all the stats from ESPN.com and format them in the manner
-    expected by the optimizer.'''
+    expected by the optimizer.
+    Params:
+     score       Can be attribute of Player or callable expecting Player as arg
+     season      season to get stats for from ESPN
+     benchfrac   Fraction of points awarded to substitutes
+     adjustments Externally defined adjustments to player worth (injuries etc.)
+    '''
     players = []
 
     _positions = ['forwards', 'midfielders', 'defenders', 'keepers']
@@ -54,6 +99,12 @@ def get_player_stats(season=2014, benchfrac=.1):
         for player in _players:
             _id += 1
 
+            # Find any external adjustment factoring to player worth
+            adj_id = p(layer.first_name + player.last_name).strip()
+            adj_factor = 1. # default - no adjustment
+            if adj_id in adjustments:
+                adj_factor = adjustments[adj_id]
+
             for captain in [0, 1]:
                 for pfx in ['', 'sub-']:
                     _uid += 1
@@ -63,7 +114,14 @@ def get_player_stats(season=2014, benchfrac=.1):
                     postfix = "starter" if not len(pfx) else "sub"
                     postfix += "- captain" if captain else ""
 
-                    points = player.total_points
+                    # Get score from. Default is to pass string for attribute
+                    # on Player instance, but can do a lambda or other
+                    # callable as well.
+                    points = 0.
+                    if hasattr(score, '__call__'):
+                        points = score(player)
+                    else:
+                        points = getattr(player, score)
 
                     if len(pfx)>0:
                         # Severely down-weight scores of benched players
@@ -73,6 +131,10 @@ def get_player_stats(season=2014, benchfrac=.1):
                         # Captains earn double points
                         points *= 2.
 
+                    # Factor in external adjustments (default is just 1.0)
+                    points *= adj_factor
+
+                    # Build player instance for insertion into talent pool
                     stats = {
                         'cost' : player.cost,
                         'score' : points,
@@ -107,48 +169,34 @@ def get_player_stats(season=2014, benchfrac=.1):
 
                     players.append(stats)
 
+    # Create player id fields to build uniqueness constraints
     all_ids = range(_id + 1)
     for player in players:
         for i in all_ids:
             player['id%d' % i] = float(player['pid']==i)
 
-
     return players
 
 
 
-if __name__=='__main__':
-    # Defaults
-    season = 2014
-    tolerance = 10**-6
-    budget = 100.
-    bench = 1/10.
 
-    # Get CL params
-    parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('-s', '--season', type=int, default=season,
-        help="ESPN endpoint only currently supports 2014 season")
-    parser.add_argument('-t', '--tolerance', type=float, default=tolerance,
-        help="Fuzzy boundaries around optimal solution, default is 10e-6")
-    parser.add_argument('-b', '--budget', type=float, default=budget,
-        help="Salary cap in millions of pounds, default is 100")
-    parser.add_argument('-e', '--bench', type=float, default=bench,
-        help="Fraction of score to reduce substitutes by, default is 1/10")
+def optimize(season=2014,
+    tolerance=1e-6, budget=100., bench=.1,
+    adjustments=None, score="total_points"):
+    '''Configure and run KSP solver with given parameters. Returns openopt's
+    solution object'''
 
-    cli = parser.parse_args()
-
-    # Read CLI params back into internal vars
-    season = cli.season
-    tolerance = cli.tolerance
-    budget = cli.budget
-    bench = cli.bench
+    # Get adjustments, if a file is given
+    adj_file = adjustments
+    if adj_file is not None:
+        adjustments = get_injured_list(adj_file)
 
     # Get stats
     print >>stderr, "Getting current stats from ESPN ...",
-    players = get_player_stats(season=season, benchfrac=bench)
+    players = get_player_stats(season=season,
+        benchfrac=bench, score=score, adjustments=adjustments)
     print >>stderr, "done."
-
 
     # Define constraints
     print >>stderr, "Defining constraints ...",
@@ -197,13 +245,14 @@ if __name__=='__main__':
     # Run optimizer
     r = p.solve('glpk', iprint=1, nProc=2)
 
-
-    # Output solution
-    print >>stderr, "Best solution found:"
-    pprint(r.xf)
+    return (r, players)
 
 
-    os.system('clear')
+
+
+
+def print_results(r, players):
+    '''Take results object and players pool and print human-readable results'''
     names = r.xf
 
     # Find selected players in `players` list
@@ -233,10 +282,14 @@ if __name__=='__main__':
     total_cost = 0.
     for player in roster:
         total_cost += player['cost']
-        print row_format.format(player['fname'].decode('utf8'),
-            player['lname'].decode('utf8'), player['position'], player['bench'],
+        print row_format.format(
+            player['fname'].decode('utf8'),
+            player['lname'].decode('utf8'),
+            player['position'],
+            player['bench'],
             "X" if player['captain'] else "",
-            player['club'], player['cost'])
+            player['club'],
+            player['cost'])
 
     under_budget = round(budget-total_cost)
     if under_budget == 0:
@@ -246,6 +299,64 @@ if __name__=='__main__':
     print u"Total Cost:\t£", total_cost, "M"
     print u"Under budget:\t£", under_budget, "M"
     print
+
+
+
+
+
+if __name__=='__main__':
+    # Run from CLI
+
+    # Defaults
+    season = 2014
+    tolerance = 1e-6
+    budget = 100.
+    bench = 1e-1
+    adjustments = None
+    score = "total_points"
+
+
+    # Get CL params
+    parser = argparse.ArgumentParser(description=__doc__)
+
+    parser.add_argument('-y', '--season', type=int, default=season,
+        help="ESPN endpoint only currently supports 2014 season")
+    parser.add_argument('-t', '--tolerance', type=float, default=tolerance,
+        help="Fuzzy boundaries around optimal solution, default is 1e-6")
+    parser.add_argument('-b', '--budget', type=float, default=budget,
+        help="Salary cap in millions of pounds, default is 100")
+    parser.add_argument('-e', '--bench', type=float, default=bench,
+        help="Fraction of score to reduce substitutes by, default is 1/10")
+    parser.add_argument('-a', '--adjustments', type=str, default=adjustments,
+        help="List of adjustments to player worth (file name)")
+    parser.add_argument('-s', '--score', type=str, default=score)
+
+    cli = parser.parse_args()
+
+    # Read CLI params back into internal vars
+    season = cli.season
+    tolerance = cli.tolerance
+    budget = cli.budget
+    bench = cli.bench
+    adjustments = cli.adjustments
+    score = cli.score
+
+
+
+    # Run optimizer
+    r, players = optimize(season=season, tolerance=tolerance,
+        budget=budget, bench=bench, adjustments=adjustments,
+        score=score)
+
+    # Output raw solution from openopt solver
+    print >>stderr, "Best solution found:"
+    pprint(r.xf)
+
+    # Print tidied-up results
+    os.system('clear')
+
+    print_results(r, players)
+    
 
 
 
