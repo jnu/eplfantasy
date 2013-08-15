@@ -5,7 +5,7 @@ optimize_roster.py
 Optimize a fantasy English Premier List roster.
 
 ---
-Fetches stats from ESPN EPL fantasy server and parses them via eplstats.py.
+Fetches stats from an EPL fantasy server and parses them via eplstats.py.
 Then search for a solution to the Knapsack Problem that is constrained by
 the number of players (and in the right positions) and also the given budget.
 
@@ -109,7 +109,7 @@ def get_player_stats(score='total_points',
             if adjustments is not None:
                 adj_id = (player.first_name + player.last_name)\
                             .strip().encode('ascii', 'ignore')
-                            
+
                 if adj_id in adjustments:
                     adj_factor = adjustments[adj_id]
 
