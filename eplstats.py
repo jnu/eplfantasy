@@ -2,11 +2,16 @@
 '''
 eplstats.py
 
-Get basic English Premier League fantasy stats from the ESPN server.
+Get basic English Premier League fantasy stats from remote sources.
 
 ---
 Usage:
->>> espnstats.get(position, season=2014)
+>>> downloader = eplstats.Downloader(
+    source='premierleague',
+    username='your@email.com',
+    password='password'
+)
+>>> downloader.get(position)
 
 ---
 Possible values of `position` are:
@@ -15,8 +20,14 @@ Possible values of `position` are:
  * midfielders
  * forwards
 
-Request returns list of all Players from ESPN server with most recent data.
-Player instances have the following attributes:
+Possible sources are:
+ * premierleague            Official English Premier League website
+ * espn                     ESPN Fantasy Soccer server
+
+Note `premierleague` provides injury statistics as well.
+
+Request returns list of all Players from remote server with most recent data.
+Player instances definitely have the following attributes:
  * first_name
  * last_name
  * total_points     (fantasy points, per ESPN's rules)
@@ -86,13 +97,22 @@ def toFloat(v):
     return float(_f)
 
 def get_by_id(soup, tag, id_):
-    return soup.find(tag, attrs={'id': id_}).text.encode('utf8')
+    el = soup.find(tag, attrs={'id': id_})
+    if el is not None:
+        return el.text.encode('utf8')
+    return ''
 
 def get_by_class(soup, tag, class_):
-    return soup.find(tag, attrs={'class': class_}).text.encode('utf8')
+    el = soup.find(tag, attrs={'class': class_})
+    if el is not None:
+        return el.text.encode('utf8')
+    return ''
 
 def get_by_tag(soup, tag):
-    return soup.find(tag).text.encode('utf8')
+    el = soup.find(tag)
+    if el is not None:
+        return el.text.encode('utf8')
+    return ''
 
 
 
@@ -164,8 +184,10 @@ class Downloader(object):
 
 
     def get(self, position, source=None, season=None, adjustments=None):
+        '''Retrieve data from remote site for given position'''
         if season is None:
             season = self.defaults['season']
+
         if adjustments is None:
             adjustments = self.defaults['adjustments']
 
