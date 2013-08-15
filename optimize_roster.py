@@ -63,7 +63,8 @@ def get_player_stats(season=2014, benchfrac=.1):
                     postfix = "starter" if not len(pfx) else "sub"
                     postfix += "- captain" if captain else ""
 
-                    points = player.average_points
+                    points = player.total_points
+
                     if len(pfx)>0:
                         # Severely down-weight scores of benched players
                         points *= benchfrac
@@ -237,9 +238,13 @@ if __name__=='__main__':
             "X" if player['captain'] else "",
             player['club'], player['cost'])
 
+    under_budget = round(budget-total_cost)
+    if under_budget == 0:
+        under_budget = 0.
+
     print 
     print u"Total Cost:\t£", total_cost, "M"
-    print u"Under budget:\t£", budget-total_cost, "M"
+    print u"Under budget:\t£", under_budget, "M"
     print
 
 
