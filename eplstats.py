@@ -81,7 +81,11 @@ class Player(object):
 
     def __repr__(self):
         return "<Player %s %s (%s)>" % \
-            (self.first_name, self.last_name, self.club)
+            (
+                self.first_name.encode('ascii', 'replace'),
+                self.last_name.encode('ascii', 'replace'),
+                self.club.encode('ascii','replace')
+            )
 
 
 def toInt(v):
@@ -114,9 +118,9 @@ def get_by_tag(soup, tag):
         return el.text.encode('utf8')
     return ''
 
-
-
-
+def retryq(msg="Try again?"):
+    t = raw_input("%s " % msg).strip()
+    return (t+"es")[:3].lower() == 'yes'
 
 
 
@@ -148,7 +152,8 @@ class Downloader(object):
             'now_cost' : 'cost',
             'second_name': 'last_name',
             'element_type_id' : 'position',
-            'points_per_game' : 'average_points'
+            'points_per_game' : 'average_points',
+            'team_id' : 'club'
         },
         'transforms' : {
             'cost' : lambda c: c/10.,
@@ -161,7 +166,9 @@ class Downloader(object):
             'chance_of_playing_this_round' : \
                 lambda c: c/100. if c is not None else 1.,
             'chance_of_playing_next_round' : \
-                lambda c: c/100. if c is not None else 1.
+                lambda c: c/100. if c is not None else 1.,
+            'club' : \
+                lambda c: c
         }
     }
 
@@ -171,6 +178,7 @@ class Downloader(object):
         '''Source must be `espn` or `premierleague`.'''
         self.username = username
         self.password = password
+        self.source = source
 
         self._cache = dict()
 
@@ -224,24 +232,12 @@ class Downloader(object):
             'redirectUrl' : ''
         }
 
-        req = urllib2.Request(self._pl_data['login_url'],
-            urllib.urlencode(data))
-
-        # Execute request, hopefully will set a cookie when logged in
+        # Execute request, should set a cookie when logged in
         success = True
         try:
             html = self.opener\
                 .open(self._pl_data['login_url'], urllib.urlencode(data))\
                 .read()
-
-            # Verify success
-            soup = bs(html)
-            e = soup.find('label',
-                attrs={'class':'error', 'for':'j_password'})
-            if e is not None:
-                raise AccessError("Login failed: %s" \
-                    % e.text.encode('ascii', 'ignore'))
-                success = False
 
         except urllib2.HTTPError as e:
             raise AccessError(\
@@ -249,28 +245,37 @@ class Downloader(object):
                 % (e.code, str(e.reason)))
             success = False
 
-        return success
+        return success and self._pl_test_login(html)
+
+
 
     def interpret_pl_data(self, data):
         '''Take raw data from the website as dict (via json) and expand it
         into more sensible player data.'''
         raw_player_data = data['elInfo']
         field_map = data['elStat']
+        team_map = data['teamInfo']
+        # Install transform for team_map
+        self._pl_data['transforms']['club'] = \
+            lambda c: team_map[c]['short_name']
+
         aliases = self._pl_data['aliases']
         transforms = self._pl_data['transforms']
+
+        self._cache['raw_data'] = data
 
         # Create list of field labels
         field_labels = []
         for key, val in field_map.iteritems():
             while len(field_labels) <= val:
-                field_labels.append(len(field_labels)-1)
+                field_labels.append("f_%d" % (len(field_labels)-1))
 
             if key in aliases:
                 # Some keys should be renamed to play nice with optimizer
                 key = aliases[key]
 
 
-            field_labels[val] = key
+            field_labels[val] = str(key)
 
         players = []
         for player_data_list in raw_player_data:
@@ -288,18 +293,96 @@ class Downloader(object):
 
                 players.append(new_player)
 
-            except TypeError:
+            except TypeError as e:
                 # There is at least one NoneType that will be encountered.
                 # Ignore it.
+                print >>stderr, "Warning: %s" % str(e)
                 pass
 
         return players
+
+
+    def _pl_test_login(self, html=None):
+        url = self._pl_data['url']
+        logged_in = True
+
+        if html is None:
+            # Site hasn't been accessed yet
+            try:
+                html = self.opener.open(url)
+            except urllib2.HTTPError as e:
+                if e.code==403:
+                    logged_in = False
+                else:
+                    # A non-403 error was received from PL site. This means
+                    # an unknown login status (there was a separate issue)
+                    print >>stderr, "Can't access Premier League site: %s" \
+                        % str(e)
+
+                    return None
+
+        # Now check HTML to see that there's no login form
+        soup = bs(html)
+
+        pwd = soup.find('input', attrs={"id": "id_password"})
+        err = soup.find('p', attrs={'class': 'ismError'})
+        err2 = soup.find('label',
+                attrs={'class':'error', 'for':'j_password'})
+
+        if pwd is not None or err is not None:
+            logged_in = False
+
+        if err2 is not None:
+            print >>stderr, "Remote Error: %s" % err2.text.encode('utf8')
+            logged_in = False
+
+        # These are all the good heuristics so far
+        return logged_in
+
+
+
+    def _pl_login_mediator(self):
+        '''Set up login to EPL site. Returns string retry, fail, or success.'''
+        print >>stderr, "Need to log in to Premier League website."
+
+        # Prompt for username / password as needed
+        if len(self.username)<1:
+            username = raw_input("Username> ").strip()
+        else:
+            username = self.username
+
+        if len(self.password)<1:
+            password = getpass("Password> ").strip()
+        else:
+            password = self.password
+
+        # Attempt login 
+        print >>stderr, "Logging in ..."
+        try:
+            s = self.login_to_pl(username=username, password=password)
+        except Exception as er:
+            print >>stderr, "Error: %s" % str(er)
+            s = False
+        
+        if not s:
+            # couldn't log in.
+            print >>stderr, "Login did not succeed."
+            retry = retryq()
+            return "retry" if retry else "fail"
+
+        else:
+            # Login succeeded
+            self.username = username
+            self.password = password
+            return "success"
+    
 
 
 
     def get_pl(self, position, season=None, adjustments=None):
         '''Get players / stats for given position, saving adjustments in
         given file.'''
+
         if season is None:
             season = self.defaults['season']
         if adjustments is None:
@@ -312,60 +395,33 @@ class Downloader(object):
             player_data = self._cache['pldata']
         else:
             # Try to connect to PL website 
-            html = ''
-            url = self._pl_data['url']
-            try:
-                html = self.opener.open(url)
-            except urllib2.HTTPError as e:
-                if hasattr(e, 'code') and e.code==403:
-                    # Forbidden! Try to log in
-                    print >>stderr, "Need to log in to Premier League website."
+            
+            # Check login
+            logged_in = self._pl_test_login()
+            retry = True
 
-                    # Prompt for username / password as needed
-                    if len(self.username)<1:
-                        username = input("Username> ").strip()
-                    else:
-                        username = self.username
+            while not logged_in and retry:
+                resp = self._pl_login_mediator()
 
-                    if len(self.password)<1:
-                        password = getpass("Password> ").strip()
-                    else:
-                        password = self.password
-
-                    # Attempt login 
-                    print >>stderr, "Logging in ..."
-                    try:
-                        s=self.login_to_pl(username=username,password=password)
-                    except Exception as er:
-                        print >>stderr, "Error: %s" % str(er)
-                        s = False
-                    
-                    if not s:
-                        # couldn't log in.
-                        print >>stderr, "Login did not succeed."
-                        t = input("Try again? ").strip()
-
-                        if (t+"es")[:3].lower() == 'yes':
-                            self.get_pl(position,
-                                season=season, adjustments=adjustments)
-                        else:
-                            exit(1)
-
-                    else:
-                        # Login worked out! Recurse.
-                        self.username = username
-                        self.password = password
-                        self.get_pl(position,
-                            season=season, adjustments=adjustments)
+                if resp == 'success':
+                    logged_in = True
+                elif resp == 'retry':
+                    print >>stderr, "Retrying login ..."
+                    retry = True
+                elif resp == 'fail':
+                    print >>stderr, "Failed to get stats."
+                    retry = False
                 else:
-                    # A non-403 error was received from PL site
-                    print >>stderr, "Can't access Premier League site: %s" \
-                        % str(e)
+                    print >>stderr, "Unknown response:", resp
+                    retry = False
 
-                    t = input("Try again? ").strip()
-                    if (t+"es")[:3].lower() == 'yes':
-                        self.get_pl(position,
-                            season=season, adjustments=adjustments)
+            if not logged_in:
+                return []
+            else:
+                print >>stderr, "Successfully logged in."
+
+            # Get the actual site
+            html = self.opener.open(self._pl_data['url'])
 
             # Successfully loaded PL website in `html` variable
             soup = bs(html)
@@ -383,30 +439,34 @@ class Downloader(object):
         # Now `player_data` has all the info from the website, and it
         # is well-formatted as instances of Player.
         if adjustments is not None:
-            # Write adjustments to external file
-
-            # Find players that need adjusting
-            to_adjust = [p for p in player_data
-                            if player_data.chance_of_playing_this_round<1.]
-
-            with open(adjustments) as fh:
-                row_format = u"{:<30}{:^15}{:<35}"
-                print >>fh, row_format.format("Name", "Adjustment", "Notes")
-                for player in to_adjust:
-                    adj_name = (player.first_name + player.last_name)\
-                                .strip().encode('ascii', 'ignore')
-                    print >>fh, row_format.format(
-                        adj_name,
-                        player.chance_of_playing_this_round,
-                        player.news
-                    )
+            self._pl_write_adjustments(adjustments, player_data)
 
         # Return all players matching `position`
         position = position.lower()
-        return [p for p in player_data if player_data['position']==position]
+
+        return [player for player in player_data if player.position==position]
 
 
 
+
+    def _pl_write_adjustments(self, adjfile, player_data):
+        # Write adjustments to external file
+
+        # Find players that need adjusting
+        to_adjust = [p for p in player_data
+                        if p.chance_of_playing_this_round<1.]
+
+        with open(adjfile, 'w') as fh:
+            row_format = u"{:<30}{:^15}{:<35}"
+            print >>fh, row_format.format("Name", "Adjustment", "Notes")
+            for player in to_adjust:
+                adj_name = (player.first_name + player.last_name)\
+                            .strip().encode('ascii', 'replace')
+                print >>fh, row_format.format(
+                    adj_name,
+                    player.chance_of_playing_this_round,
+                    player.news
+                )
 
 
 
