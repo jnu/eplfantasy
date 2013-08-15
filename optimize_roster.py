@@ -183,7 +183,7 @@ def get_player_stats(score='total_points',
 
 def optimize(season=2014,
     tolerance=1e-6, budget=100., bench=.1,
-    adjustments=None, score="total_points"):
+    adjustments=None, score="total_points", solver="glpk"):
     '''Configure and run KSP solver with given parameters. Returns openopt's
     solution object'''
 
@@ -243,7 +243,7 @@ def optimize(season=2014,
     p = KSP(objective, players, constraints=constraints, name='ksp_mop')
 
     # Run optimizer
-    r = p.solve('glpk', iprint=1, nProc=2)
+    r = p.solve(solver, iprint=1, nProc=2)
 
     return (r, players)
 
@@ -314,6 +314,7 @@ if __name__=='__main__':
     bench = 1e-1
     adjustments = None
     score = "total_points"
+    solver_lbl = 'glpk'  # could be interalg
 
 
     # Get CL params
@@ -329,7 +330,10 @@ if __name__=='__main__':
         help="Fraction of score to reduce substitutes by, default is 1/10")
     parser.add_argument('-a', '--adjustments', type=str, default=adjustments,
         help="List of adjustments to player worth (file name)")
-    parser.add_argument('-s', '--score', type=str, default=score)
+    parser.add_argument('-s', '--score', type=str, default=score,
+        help="Player stat to be used in determining player's worth")
+    parser.add_argument('-S', '--solver', type=str, default=solver_lbl,
+        help="Solver to use. Can be interalg or glpk, or other KSP solvers.")
 
     cli = parser.parse_args()
 
@@ -340,13 +344,14 @@ if __name__=='__main__':
     bench = cli.bench
     adjustments = cli.adjustments
     score = cli.score
+    solver_lbl = cli.solver
 
 
 
     # Run optimizer
     r, players = optimize(season=season, tolerance=tolerance,
         budget=budget, bench=bench, adjustments=adjustments,
-        score=score)
+        score=score, solver=solver_lbl)
 
     # Output raw solution from openopt solver
     print >>stderr, "Best solution found:"
