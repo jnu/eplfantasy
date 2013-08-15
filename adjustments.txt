@@ -1,0 +1,15 @@
+Player            Score Adjustment        Notes
+Gareth Bale                   0.25        Foot injury
+Theo Walcott                  0.75        Knee injury
+Luis Suárez                   0.00        Suspended                    
+Wayne Rooney                  0.50        Hamstring injury
+Jose Reina                    0.00        Playing with Napoli
+Jan Vertonghen                0.50        Ankle injury
+Daniel Agger                  0.75        Knee injury
+Mikel Arteta                  0.50        Thigh injury
+Jonathan de Guzman            0.00        Head injury
+Steven Fletcher               0.50        Ankle injury
+Sebastien Bassong             0.75        Unfit
+Rafael Da Silva               0.00        Suspended
+Craig Gardner                 0.00        Suspended
+Anthony Pilkington            0.50        Knee injury
