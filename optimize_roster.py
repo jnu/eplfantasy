@@ -40,11 +40,11 @@ import re
 
 
 
-def get_injured_list(fn, has_header=False):
+def get_injured_list(fn, has_header=True):
     if not os.path.exists(fn):
         raise IOError("Injured list file `%s` does not exist" % fn)
 
-    disabled_list = dict()
+    disabled_list = []
 
     with open(fn) as fh:
 
@@ -54,9 +54,16 @@ def get_injured_list(fn, has_header=False):
                 continue
 
             try:
-                name, factor, notes = [t.strip() for t in t.split("  ")]
-            except Exception:
-                raise IOError("Injured list file `%s` is misformatted" % fn)
+                # Sloppy splitting. Should maybe use struct module.
+                fname = line[:20].strip()
+                lname = line[20:40].strip()
+                club = line[40:50].strip()
+                factor = float(line[50:70].strip())
+                notes = line[70:].strip()
+
+            except Exception as e:
+                raise IOError("Injured list file `%s` is misformatted: %s" \
+                    %(fn, e))
 
             try:
                 factor = float(factor)
@@ -70,15 +77,93 @@ def get_injured_list(fn, has_header=False):
                     raise ValueError("Can't parse %s as float" % factor)
 
             # Store player info
-            disabled_list[name] = factor
+            disabled_list.append({
+                'first_name' : fname,
+                'last_name' : lname,
+                'factor' : factor,
+                'club' : club,
+                'news' : notes
+            })
 
     return disabled_list
 
 
 
+def sanitize(s):
+    try:
+        s = s.encode('ascii', 'replace')
+    except UnicodeDecodeError:
+        s = s.decode('utf8').encode('ascii', 'replace')
+
+    return re.sub(r'[^\w]', '', s.lower())
+
+
+
+
+
+
+def get_adjustment(player, adjustments, threshold=1, silent=False):
+    '''Determine whether player should be devalued at all. Find given
+    player in the adjustments list. Try to match player names via several
+    heuristics. Use threshold to ignore adjustments above a certain level.
+    Useful e.g. if you don't want to devalue players who have a .75 chance
+    of playing --- these people could be back for the rest of the season.'''
+    fname = sanitize(player.first_name)
+    lname = sanitize(player.last_name)
+    club = sanitize(player.club)
+
+    adj = 1.
+
+    for _aplayer in adjustments:
+        # Note : Right now the heuristics used for matching are *good enough*,
+        # but they could be better.
+
+        if sanitize(_aplayer['club']) == club:
+            # Correct club
+            _aln = sanitize(_aplayer['last_name'])
+            _afn = sanitize(_aplayer['first_name'])
+
+            if _aln==lname and _afn==fname:
+                # Simple case: total match for first name, last name
+                adj = _aplayer['factor']
+                break
+
+            elif _aln==lname and len(fname)==0:
+                # Helps match Brazilians, mostly
+                adj = _aplayer['factor']
+                break
+
+            elif _afn==fname and len(lname)==0:
+                # Same as previous
+                adj = _aplayer['factor']
+                break
+
+            elif fname[:1]==_afn[:1] and _aln==lname:
+                # First initial last name. Hopefully no collisions!
+                adj = _aplayer['factor']
+                break
+
+    if adj >= threshold:
+        adj = 1.
+
+    if not silent and adj!=1.:
+        print >>stderr, " * Ignoring %s %s (%s) ~ %s" % \
+        (
+            _aplayer['first_name'],
+            _aplayer['last_name'],
+            _aplayer['club'],
+            _aplayer['news']
+        )
+
+    return adj
+
+
+
+
+
 
 def get_player_stats(score='total_points',
-    season=2014, benchfrac=.1, adjustments=dict(),
+    season=2014, benchfrac=.1, adjustments=None,
     source='espn', username='', password=''):
     '''Get all the stats from ESPN.com and format them in the manner
     expected by the optimizer.
@@ -90,6 +175,12 @@ def get_player_stats(score='total_points',
     '''
     players = []
 
+    # Keyword arguments are named after command line arguments.
+    # adjustments really refers to the file name of the adjustments file
+    # Internally adjustments should refer to the list of the adjustments
+    adjfile = adjustments
+    adjustments = None
+
     _positions = ['forwards', 'midfielders', 'defenders', 'keepers']
     _id = 0
     _uid = 990000
@@ -99,7 +190,15 @@ def get_player_stats(score='total_points',
 
     for position in _positions:
         print >>stderr, "  Getting stats about %s ..." % position
-        _players = downloader.get(position, source=source, season=season)
+        _players = downloader.get(position,
+            source=source, season=season, adjustments=adjfile)
+
+
+        # Get adjustments, if a file is given
+        if adjfile is not None and adjustments is None:
+            # Don't reparse adjustments file every run.
+            adjustments = get_injured_list(adjfile)
+
 
         for player in _players:
             _id += 1
@@ -108,11 +207,7 @@ def get_player_stats(score='total_points',
             adj_factor = 1.
 
             if adjustments is not None:
-                adj_id = (player.first_name + player.last_name)\
-                            .strip().encode('ascii', 'replace')
-
-                if adj_id in adjustments:
-                    adj_factor = adjustments[adj_id]
+                adj_factor = get_adjustment(player, adjustments)
 
             for captain in [0, 1]:
                 for pfx in ['', 'sub-']:
@@ -196,11 +291,6 @@ def optimize(season=2014,
     username='', password='', source='espn'):
     '''Configure and run KSP solver with given parameters. Returns openopt's
     solution object'''
-
-    # Get adjustments, if a file is given
-    adj_file = adjustments
-    if adj_file is not None:
-        adjustments = get_injured_list(adj_file)
 
     # Get stats
     print >>stderr, "Getting current stats from %s ..." % source

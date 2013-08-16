@@ -130,8 +130,7 @@ def retryq(msg="Try again?"):
 class Downloader(object):
 
     defaults = {
-        'season' : 2014,
-        'adjustments' : 'adjustments.txt'
+        'season' : 2014
     }
 
     _espn_data = {
@@ -187,7 +186,8 @@ class Downloader(object):
             urllib2.HTTPRedirectHandler(),
             urllib2.HTTPHandler(debuglevel=0),
             urllib2.HTTPSHandler(debuglevel=0),
-            urllib2.HTTPCookieProcessor(self.cookiejar)
+            urllib2.HTTPCookieProcessor(self.cookiejar),
+            urllib2.ProxyHandler()    # Auto-detect proxies
         )
 
         self.opener.addheaders = [
@@ -200,9 +200,6 @@ class Downloader(object):
         '''Retrieve data from remote site for given position'''
         if season is None:
             season = self.defaults['season']
-
-        if adjustments is None:
-            adjustments = self.defaults['adjustments']
 
         if source is None:
             source = self.source
@@ -385,8 +382,6 @@ class Downloader(object):
 
         if season is None:
             season = self.defaults['season']
-        if adjustments is None:
-            adjustments = self.defaults['adjustments']
 
         player_data = dict()
 
@@ -454,17 +449,20 @@ class Downloader(object):
 
         # Find players that need adjusting
         to_adjust = [p for p in player_data
-                        if p.chance_of_playing_this_round<1.]
+                        if p.chance_of_playing_next_round<1.]
 
         with open(adjfile, 'w') as fh:
-            row_format = u"{:<30}{:^15}{:<35}"
-            print >>fh, row_format.format("Name", "Adjustment", "Notes")
+            row_format = u"{:<20}{:<20}{:<10}{:<20}{:<60}"
+            print >>fh, row_format.format(
+                "First Name", "Last Name", "Club", "Adjustment", "Notes"
+            )
+
             for player in to_adjust:
-                adj_name = (player.first_name + player.last_name)\
-                            .strip().encode('ascii', 'replace')
                 print >>fh, row_format.format(
-                    adj_name,
-                    player.chance_of_playing_this_round,
+                    player.first_name.encode('ascii', 'replace'),
+                    player.last_name.encode('ascii', 'replace'),
+                    player.club,
+                    player.chance_of_playing_next_round,
                     player.news
                 )
 
