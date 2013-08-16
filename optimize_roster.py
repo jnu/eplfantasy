@@ -460,11 +460,25 @@ if __name__=='__main__':
     cli = parser.parse_args()
 
 
+    # Make certain that solver is available. Warn if trying / forced to use
+    # interalg that GLPK is much better.
+    solver_lbl = cli.solver.lower()
+    if solver_lbl=='glpk':
+        try:
+            import glpk
+        except ImportError:
+            print >>stderr, "Warning: can't find GLPK. Using interalg solver instead."
+            solver_lbl = 'interalg'
+
+    if solver_lbl=='interalg':
+        print >>stderr, "Warning: interalg will a long-ass time to solve this problem. Use GLPK if you can."
+
+
 
     # Run optimizer
     r, players = optimize(season=cli.season, tolerance=cli.tolerance,
         budget=cli.budget, bench=cli.bench, adjustments=cli.adjustments,
-        score=cli.score, solver=cli.solver, source=cli.source,
+        score=cli.score, solver=solver_lbl, source=cli.source,
         username=cli.username, password=cli.password,
         threshold=cli.threshold, nosolve=cli.nosolve)
 
