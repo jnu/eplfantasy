@@ -32,11 +32,15 @@ Joe Nudell
 
 from openopt import *
 from pprint import pprint
-from sys import stderr, exit
+from sys import stderr, stdout, exit
 import eplstats
 import argparse
 import os
 import re
+
+
+# globals
+roster_line_format= u"{:<15}{:<15}{:<15}{:<14}{:^6}{:<5}{:<7}"
 
 
 
@@ -100,6 +104,45 @@ def sanitize(s):
 
 
 
+def player_in_roster(player, roster,
+    first_name='first_name', last_name='last_name', club='club'):
+    '''Try to find given player (Player object) in roster (list of dicts).
+    Problem is hard because of possible variations in spelling, encoding, etc.
+    Heuristics used are to first match club, then try some variations of the
+    sanitized name.
+    Returns the player dict if found in roster, otherwise None.'''
+    fname = sanitize(player.first_name)
+    lname = sanitize(player.last_name)
+    club = sanitize(player.club)
+
+    for _aplayer in roster:
+        # Note : Right now the heuristics used for matching are *good enough*,
+        # but they could be better.
+
+        if sanitize(_aplayer[club]) == club:
+            # Correct club
+            _aln = sanitize(_aplayer[last_name])
+            _afn = sanitize(_aplayer[first_name])
+
+            if _aln==lname and _afn==fname:
+                # Simple case: total match for first name, last name
+                return _aplayer
+
+            elif _aln==lname and len(fname)==0:
+                # Helps match Brazilians, mostly
+                return _aplayer
+
+            elif _afn==fname and len(lname)==0:
+                # Same as previous
+                return _aplayer
+
+            elif fname[:1]==_afn[:1] and _aln==lname:
+                # First initial last name. Hopefully no collisions!
+                return _aplayer
+
+    return None
+
+
 
 
 def get_adjustment(player, adjustments, threshold=1, silent=False):
@@ -108,40 +151,12 @@ def get_adjustment(player, adjustments, threshold=1, silent=False):
     heuristics. Use threshold to ignore adjustments above a certain level.
     Useful e.g. if you don't want to devalue players who have a .75 chance
     of playing --- these people could be back for the rest of the season.'''
-    fname = sanitize(player.first_name)
-    lname = sanitize(player.last_name)
-    club = sanitize(player.club)
-
     adj = 1.
 
-    for _aplayer in adjustments:
-        # Note : Right now the heuristics used for matching are *good enough*,
-        # but they could be better.
+    adj_player = player_in_roster(player, adjustments)
 
-        if sanitize(_aplayer['club']) == club:
-            # Correct club
-            _aln = sanitize(_aplayer['last_name'])
-            _afn = sanitize(_aplayer['first_name'])
-
-            if _aln==lname and _afn==fname:
-                # Simple case: total match for first name, last name
-                adj = _aplayer['factor']
-                break
-
-            elif _aln==lname and len(fname)==0:
-                # Helps match Brazilians, mostly
-                adj = _aplayer['factor']
-                break
-
-            elif _afn==fname and len(lname)==0:
-                # Same as previous
-                adj = _aplayer['factor']
-                break
-
-            elif fname[:1]==_afn[:1] and _aln==lname:
-                # First initial last name. Hopefully no collisions!
-                adj = _aplayer['factor']
-                break
+    if adj_player is not None:
+        adj = adj_player['factor']
 
     if adj >= threshold:
         adj = 1.
@@ -357,7 +372,7 @@ def optimize(season=2014,
 
 
 
-def print_results(r, players):
+def print_results(r, players, fh=stdout, print_cost=True):
     '''Take results object and players pool and print human-readable results'''
     names = r.xf
 
@@ -379,16 +394,18 @@ def print_results(r, players):
             roster.append(player)
 
     # Print details about selected roster
-    row_format= u"{:<15}{:<15}{:<15}{:<14}{:^6}{:<5}{:<7}"
+    # Note: row_format is read from a global so it can be shared with other
+    # modules.
+    row_format = roster_line_format
 
-    print row_format.format('First Name',
+    print >>fh, row_format.format('First Name',
         'Last Name', 'Position', 'Starting', 'Capt.', 'Club', 'Salary')
-    print row_format.format(*["---"]*7)
+    print >>fh, row_format.format(*["---"]*7)
 
     total_cost = 0.
     for player in roster:
         total_cost += player['cost']
-        print row_format.format(
+        print >>fh, row_format.format(
             player['fname'].decode('utf8'),
             player['lname'].decode('utf8'),
             player['position'],
@@ -401,10 +418,11 @@ def print_results(r, players):
     if under_budget == 0:
         under_budget = 0.
 
-    print 
-    print u"Total Cost:\t£", total_cost, "M"
-    print u"Under budget:\t£", under_budget, "M"
-    print
+    if print_cost:
+        print >>fh, 
+        print >>fh, u"Total Cost:\t£", total_cost, "M"
+        print >>fh, u"Under budget:\t£", under_budget, "M"
+        print >>fh, 
 
 
 
@@ -426,6 +444,7 @@ if __name__=='__main__':
     source = 'espn'
     threshold = 1.
     nosolve = False
+    outfilename = None
 
 
     # Get CL params
@@ -455,6 +474,8 @@ if __name__=='__main__':
         help="Threshold for devaluing injured players at all")
     parser.add_argument('--nosolve', action="store_true",
         help="Don't execute the solver")
+    parser.add_argument('-o', '--out', type=str, default=outfilename,
+        help="File to write team roster to")
 
 
     cli = parser.parse_args()
@@ -490,6 +511,11 @@ if __name__=='__main__':
         # Print tidied-up results
         os.system('clear')
 
+        if outfilename is not None:
+            # Write results to out file as necessary.
+            with open(outfilename, "w") as fh:
+                print_results(r, players, fh=fh, print_cost=False)
+        # Print results to stdout
         print_results(r, players)
     else:
         print >>stderr, "Players stats loaded in `players` variable"
