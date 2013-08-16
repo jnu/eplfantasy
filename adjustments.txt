@@ -1,1 +1,79 @@
-Name                            Adjustment   Notes                              
+First Name          Last Name           Club      Adjustment          Notes                                                       
+Thomas              Vermaelen           ARS       0.0                 Back injury - Expected back 14 Sep                          
+Bacary              Sagna               ARS       0.75                Ankle injury - 75% chance of playing                        
+Nacho               Monreal             ARS       0.0                 Back injury - Expected back 01 Sep                          
+Theo                Walcott             ARS       0.75                Knee injury - 75% chance of playing                         
+Aaron               Ramsey              ARS       0.75                Ankle injury - 75% chance of playing                        
+Mikel               Arteta              ARS       0.5                 Thigh injury - 50% chance of playing                        
+Yao                 Gervinho            ARS       0.0                 Moved to Roma on 8/8                                        
+Vassiriki           Diaby               ARS       0.0                 Knee injury - Unknown return date                           
+Yaya                Sanogo              ARS       0.75                Hamstring injury - 75% chance of playing                    
+Chris               Herd                AVL       0.5                 Calf injury - 50% chance of playing                         
+Charles             N'Zogbia            AVL       0.0                 Achilles injury - Unknown return date                       
+Yacouba             Sylla               AVL       0.5                 Ankle injury - 50% chance of playing                        
+Andrew              Taylor              CAR       0.0                 Suspended until 25 Aug                                      
+Ben                 Nugent              CAR       0.0                 Joined Brentford until 5/1/1/4. - Expected back 06 Jan      
+Andreas             Cornelius           CAR       0.5                 Ankle injury - 50% chance of playing                        
+Jonathan            Parr                CRY       0.25                Lack of match fitness - 25% chance of playing               
+Yannick             Bolasie             CRY       0.0                 Hamstring injury - Unknown return date                      
+Jerome              Thomas              CRY       0.0                 Ankle injury - Expected back 31 Aug                         
+Glenn               Murray              CRY       0.0                 Knee injury - Unknown return date                           
+Tony                Hibbert             EVE       0.0                 Knock - Expected back 24 Aug                                
+Antolin             Alcaraz             EVE       0.0                 Hamstring injury - Expected back 31 Aug                     
+Darron              Gibson              EVE       0.5                 Knee injury - 50% chance of playing                         
+Alex                Kacaniklic          FUL       0.75                Hamstring injury - 75% chance of playing                    
+Corry               Evans               HUL       0.0                 Joined Blackburn on 2/8.                                    
+Stephen             Quinn               HUL       0.0                 Hamstring injury - Expected back 24 Aug                     
+Jose                Reina               LIV       0.0                 Joined Napoli in season-long loan deal. - Expected back 12 May
+Martin              Skrtel              LIV       0.75                Knee injury - 75% chance of playing                         
+Daniel              Agger               LIV       0.75                Knee injury - 75% chance of playing                         
+Conor               Coady               LIV       0.0                 Joined Sheffield United on six-month loan deal on 22/7. - Expected back 22 Jan
+Jesus               Fernandez Saez      LIV       0.0                 Joined Almeria on season-long loan. - Expected back 12 May  
+Luis                Suarez              LIV       0.0                 Suspended - unknown return date                             
+Karim               Rekik               MCI       0.0                 Joined PSV on season-long loan.  - Expected back 12 May     
+Matija              Nastasic            MCI       0.0                 Ankle injury - Expected back 21 Sep                         
+Rafael              Da Silva            MUN       0.0                 Suspended - unknown return date                             
+Luis                Nani                MUN       0.5                 Knock - 50% chance of playing                               
+Michael             Carrick             MUN       0.75                Eye Injury - 75% chance of playing                          
+Darren              Fletcher            MUN       0.0                 Illness - Unknown return date                               
+Ashley              Young               MUN       0.5                 Knock - 50% chance of playing                               
+Nick                Powell              MUN       0.5                 Leg injury - 50% chance of playing                          
+Javier              Hernandez           MUN       0.5                 Thigh injury - 50% chance of playing                        
+Ryan                Taylor              NEW       0.0                 Knee injury - Unknown return date                           
+Shane               Ferguson            NEW       0.0                 Joined Birmingham on season-long loan.  - Expected back 12 May
+Mehdi               Abeid               NEW       0.0                 Joined Panathinaikos in season-long loan deal. - Expected back 12 May
+Jonas               Gutierrez           NEW       0.75                Hamstring injury - 75% chance of playing                    
+Adam                Campbell            NEW       0.0                 Moved to Carlisle in one-month loan deal on 15/8 - Expected back 15 Sep
+Declan              Rudd                NOR       0.0                 Moved to Preston on season-long loan.  - Expected back 12 May
+Leon                Barnett             NOR       0.0                 Joined Wigan on 1/8                                         
+Sebastien           Bassong             NOR       0.75                Lack of match fitness - 75% chance of playing               
+Andrew              Surman              NOR       0.0                 Joined Bournemouth on season-long loan.  - Expected back 12 May
+Anthony             Pilkington          NOR       0.5                 Knee injury - 50% chance of playing                         
+Nathaniel           Clyne               SOU       0.5                 Lack of match fitness - 50% chance of playing               
+Luke                Shaw                SOU       0.5                 Knee injury - 50% chance of playing                         
+Steve               De Ridder           SOU       0.0                 Left Southampton by mutual consent on 1/8                   
+Brek                Shea                STK       0.0                 Leg injury - Unknown return date                            
+Phil                Bardsley            SUN       0.0                 Foot injury - Unknown return date                           
+Wes                 Brown               SUN       0.0                 Knee injury - Expected back 24 Aug                          
+Lee                 Cattermole          SUN       0.5                 Knee injury - 50% chance of playing                         
+Craig               Gardner             SUN       0.0                 Suspended - unknown return date                             
+David               Vaughan             SUN       0.0                 Suspended until 24 Aug                                      
+James               McClean             SUN       0.0                 Joined Wigan for undisclosed fee on 8/8                     
+Alfred              N'Diaye             SUN       0.0                 Joined Turkish side Eskisehirspor on season-long loan. - Expected back 12 May
+Steven              Fletcher            SUN       0.5                 Ankle injury - 50% chance of playing                        
+Alan                Tate                SWA       0.0                 Joined Yeovil on loan from 23/7 until 2/1/14. - Expected back 04 Jan
+Kyle                Bartley             SWA       0.0                 Joined Birmingham City on season-long loan - Expected back 12 May
+Kemy                Agustien            SWA       0.0                 Signed for Brighton on 1/8                                  
+Jonathan            de Guzman           SWA       0.0                 Head injury - Expected back 25 Aug                          
+Jan                 Vertonghen          TOT       0.5                 Ankle injury - 50% chance of playing                        
+Clint               Dempsey             TOT       0.0                 Joined Seattle Sounders on 3/8                              
+Gareth              Bale                TOT       0.25                Foot injury - 25% chance of playing                         
+George              Thorne              WBA       0.0                 Knee injury - Unknown return date                           
+James               Collins             WHU       0.75                Knee injury - 75% chance of playing                         
+George              McCartney           WHU       0.5                 Knee injury - 50% chance of playing                         
+Andy                Carroll             WHU       0.5                 Foot injury - 50% chance of playing                         
+Leroy               Fer                 NOR       0.0                 Suspended until 24 Aug                                      
+Tomas               Kalas               CHE       0.0                 Leg injury - Unknown return date                            
+Gary                Hooper              NOR       0.5                 Shin injury - 50% chance of playing                         
+Lo?c                Remy                NEW       0.0                 Calf injury - Expected back 24 Aug                          
+Zoltan              Gera                WBA       0.0                 Knee injury - Unknown return date                           
