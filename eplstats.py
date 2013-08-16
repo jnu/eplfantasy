@@ -34,6 +34,7 @@ Player instances definitely have the following attributes:
  * average_points   (average fantasy points per week)
  * club             (club for which player plays)
  * cost             (salary for player)
+ * ownership        (percent of people who chose this player, as decimal)
 
 
 Players from ESPN source in addition have the following fields:
@@ -41,7 +42,6 @@ Players from ESPN source in addition have the following fields:
  * place            (coming week is home or away ("H" or "A"))
  * opponent         (coming week's opponent)
  * cap_change       (increase or decrease in salary, per floating cap rules)
- * ownership        (percent of fantasy league owning player, as decimal)
  * own_change       (percent increase or decrease of ownership, as decimal)
 
 
@@ -72,7 +72,6 @@ Players from EPL Fantasy source in addition have the following fields:
  * red_cards
  * saves
  * selected
- * selected_by_percent
  * status
  * transfers_balance
  * transfers_in
@@ -198,7 +197,8 @@ class Downloader(object):
             'second_name': 'last_name',
             'element_type_id' : 'position',
             'points_per_game' : 'average_points',
-            'team_id' : 'club'
+            'team_id' : 'club',
+            'selected_by_percent' : 'ownership'
         },
         'transforms' : {
             'cost' : lambda c: c/10.,
@@ -213,7 +213,8 @@ class Downloader(object):
             'chance_of_playing_next_round' : \
                 lambda c: c/100. if c is not None else 1.,
             'club' : \
-                lambda c: c
+                lambda c: c,
+            'ownership' : c/100.
         }
     }
 
