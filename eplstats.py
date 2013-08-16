@@ -30,20 +30,66 @@ Request returns list of all Players from remote server with most recent data.
 Player instances definitely have the following attributes:
  * first_name
  * last_name
- * total_points     (fantasy points, per ESPN's rules)
- * average_points   (average fantasy points per week, per ESPN's rules)
- * rank             (fantasy ranking, determined by ESPN)
+ * total_points     (fantasy points)
+ * average_points   (average fantasy points per week)
  * club             (club for which player plays)
  * cost             (salary for player)
- * opponent         (coming week's opponent)
+
+
+Players from ESPN source in addition have the following fields:
+ * rank             (fantasy ranking, determined by ESPN)
  * place            (coming week is home or away ("H" or "A"))
+ * opponent         (coming week's opponent)
  * cap_change       (increase or decrease in salary, per floating cap rules)
  * ownership        (percent of fantasy league owning player, as decimal)
  * own_change       (percent increase or decrease of ownership, as decimal)
 
+
+Players from EPL Fantasy source in addition have the following fields:
+ * added                            ISO timestamp
+ * assists
+ * bonus
+ * bps
+ * chance_of_playing_next_round
+ * chance_of_playing_this_round
+ * clean_sheets
+ * event_cost                       (Note: in hundred thousands, not millions)
+ * event_points
+ * goals_conceded
+ * goals_scored
+ * last_season_points
+ * max_cost                         (Note: in hundred thousands, not millions)
+ * min_cost                         (Note: in hundred thousands, not millions)
+ * minutes
+ * news
+ * news_added
+ * news_return
+ * news_updated
+ * original_cost                    (Note: in hundred thousands, not millions)
+ * own_goals
+ * penalties_missed
+ * penalties_saved
+ * red_cards
+ * saves
+ * selected
+ * selected_by_percent
+ * status
+ * transfers_balance
+ * transfers_in
+ * transfers_in_event
+ * transfers_out
+ * transfers_out_event
+ * value_form
+ * value_season
+ * web_name
+ * yellow_cards
+
+
 ---
-Accessor is functional as of August 13, 2013 but the ESPN endpoint is liable
-to change without notice.
+Accessors are functional as of August 15, 2013 but the remote endpoints are
+liable to change without notice. In addition, accessing these endpoints
+programmatically and using the data obtained thereby may be in violation of
+the remote site's terms of service.
 
 ---
 Joe Nudell
