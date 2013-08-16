@@ -10,12 +10,13 @@ Joe Nudell, 2013
 
 # local
 import eplstats
-from optimize_roster import get_player_stats, roster_line_format
+import optimize_roster as optr
 # 3rd party
 import numpy as np
 # stdlib
 import os
 import re
+import argparse
 from sys import stderr, exit
 
 
@@ -44,12 +45,15 @@ def read_team_file(fh):
     format that is outputted by optimize_roster.'''
     keys = []
     roster = []
-    slice_points = _get_line_slices(roster_line_format)
+    slice_points = _get_line_slices(optr.roster_line_format)
 
     for i, line in enumerate(fh.readlines())
         if i == 0 :
             # Header row: read as keys
             keys = _slice_line(line, slice_points)
+
+            # Make header names easier to work with
+            keys = [re.sub(r'\s+', '_', k.lower()) for k in keys]
         elif i == 1:
             # These are just delimeters
             continue
@@ -69,12 +73,6 @@ def read_team_file(fh):
     return roster
 
 
-def find_player_in_roster(player, roster):
-    '''Check whether player is in roster. Difficult problem because of name
-    variations used in roster, but match is attempted anyway with several
-    heuristics.'''
-    
-
 
 def team_similarity(roster1, roster1, players, freqfield='popularity'):
     '''Compare the rosters of two teams using statistics provided in the list
@@ -86,11 +84,12 @@ def team_similarity(roster1, roster1, players, freqfield='popularity'):
     v1 = np.zeros(len(players))
     v2 = np.zeros(len(players))
 
+
     for i, player in enumerate(players):
         # Calculate inverse frequency of player selection for all players
         # selected in both teams. Same idea as TF-IDF in document similarity.
-        in_team_one = find_player_in_roster(player, roster1)
-        in_team_two = find_player_in_roster(player, roster2)
+        in_team_one = player_in_roster(player, roster1) is not None
+        in_team_two = player_in_roster(player, roster2) is not None
 
         if not in_team_one and not in_team_two:
             continue
@@ -111,6 +110,100 @@ def team_similarity(roster1, roster1, players, freqfield='popularity'):
     cos = np.linalg.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
     return cos
+
+
+
+
+
+def get_player_stats(source, username=None, password=None):
+    '''Execute downloading of all player stats from provided source.'''
+    positions = ['forwards', 'midfielders', 'defenders', 'keepers']
+
+    downloader = eplstats.Downloader(source=source,
+        username=username, password=password)
+
+    all_players = []
+
+    for position in positions:
+        print >>stderr, "  Getting stats about %s ..." % position
+        _partial_players = downloader.get(position,
+            source=source, season=season, adjustments=None)
+
+        all_players += _partial_players
+
+    return all_players
+
+
+
+
+
+if __name__=='__main__':
+    '''Find the uniqueness of two teams.'''
+
+    # defaults
+    season = 2014
+    username = ''
+    password = ''
+    source = 'espn'
+
+    parser = argparse.ArgumentParser(description=__doc__)
+
+    # Required positionals:
+    parser.add_argument('path_to_team1', type=str, nargs=1, required=True,
+        help="Path to a team roster")
+    parser.add_argument('path_to_team2', type=str, nargs=1, required=True,
+        help="Path to another team roster")
+
+    # Optional arguments
+    parser.add_argument('-y', '--season', type=int, default=season,
+        help="ESPN endpoint only currently supports 2014 season")
+    parser.add_argument('-u', '--username', type=str, default=username,
+        help="Username (for official EPL site)")
+    parser.add_argument('-p', '--password', type=str, default=password,
+        help="Password (for official EPL site)")
+    parser.add_argument('-w', '--source', type=str, default=source,
+        help="Stats source website. ESPN and EPL are supported.")
+
+    cli = parser.parse_args()
+
+    # Make sure paths to files provided exist
+    for fn in [cli.path_to_team1, cli.path_to_team2]:
+        if not os.path.exists(fn):
+            raise IOError("Can't find %s" % fn)
+
+
+    # Run stats downloader
+    print >>stderr, "Fetching stats from %s ..." % cli.source
+    players = get_player_stats(source, username=username, password=password)
+    print >>stderr, "Done."
+
+    # Get team rosters
+    print >>stderr, "Processing team files ...",
+    with open(cli.path_to_team1, 'r') as fh:
+        roster1 = read_team_file(fh)
+
+    with open(cli.path_to_team2, 'r') as fh:
+        roster2 = read_team_file(fh)
+
+    print >>stderr, "done."
+
+
+    # Calculate similarity
+    print >>stderr, "Calculating similarity ...",
+    similarity = team_similarity(roster1, roster2, players)
+    print >>stderr, "done."
+
+
+    # Display result
+    print
+    print "Team similarity:", similarity
+    print
+
+
+
+
+
+
 
 
 
