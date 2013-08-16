@@ -289,7 +289,7 @@ def get_player_stats(score='total_points',
 def optimize(season=2014,
     tolerance=1e-6, budget=100., bench=.1,
     adjustments=None, score="total_points", solver="glpk",
-    username='', password='', source='espn', threshold=1.):
+    username='', password='', source='espn', threshold=1., nosolve=False):
     '''Configure and run KSP solver with given parameters. Returns openopt's
     solution object'''
 
@@ -300,6 +300,9 @@ def optimize(season=2014,
         source=source, username=username, password=password,
         threshold=threshold)
     print >>stderr, "Finished getting stats."
+
+    if nosolve:
+        return None, players
 
     # Define constraints
     print >>stderr, "Defining constraints ...",
@@ -422,6 +425,7 @@ if __name__=='__main__':
     password = ''
     source = 'espn'
     threshold = 1.
+    nosolve = False
 
 
     # Get CL params
@@ -449,6 +453,9 @@ if __name__=='__main__':
         help="Stats source website. ESPN and EPL are supported.")
     parser.add_argument('-r', '--threshold', type=float, default=threshold,
         help="Threshold for devaluing injured players at all")
+    parser.add_argument('--nosolve', action="store_true",
+        help="Don't execute the solver")
+
 
     cli = parser.parse_args()
 
@@ -459,16 +466,19 @@ if __name__=='__main__':
         budget=cli.budget, bench=cli.bench, adjustments=cli.adjustments,
         score=cli.score, solver=cli.solver, source=cli.source,
         username=cli.username, password=cli.password,
-        threshold=cli.treshold)
+        threshold=cli.threshold, nosolve=cli.nosolve)
 
     # Output raw solution from openopt solver
-    print >>stderr, "Best solution found:"
-    pprint(r.xf)
+    if r is not None:
+        print >>stderr, "Best solution found:"
+        pprint(r.xf)
 
-    # Print tidied-up results
-    os.system('clear')
+        # Print tidied-up results
+        os.system('clear')
 
-    print_results(r, players)
+        print_results(r, players)
+    else:
+        print >>stderr, "Players stats loaded in `players` variable"
     
 
 
