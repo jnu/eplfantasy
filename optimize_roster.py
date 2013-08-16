@@ -471,7 +471,7 @@ if __name__=='__main__':
             solver_lbl = 'interalg'
 
     if solver_lbl=='interalg':
-        print >>stderr, "Warning: interalg will a long-ass time to solve this problem. Use GLPK if you can."
+        print >>stderr, "Warning: interalg will take a long-ass time to solve this problem. Use GLPK if you can."
 
 
 
