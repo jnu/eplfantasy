@@ -164,7 +164,7 @@ def get_adjustment(player, adjustments, threshold=1, silent=False):
 
 def get_player_stats(score='total_points',
     season=2014, benchfrac=.1, adjustments=None,
-    source='espn', username='', password=''):
+    source='espn', username='', password='', threshold=1.):
     '''Get all the stats from ESPN.com and format them in the manner
     expected by the optimizer.
     Params:
@@ -207,7 +207,8 @@ def get_player_stats(score='total_points',
             adj_factor = 1.
 
             if adjustments is not None:
-                adj_factor = get_adjustment(player, adjustments)
+                adj_factor = get_adjustment(player, adjustments,
+                    threshold=threshold)
 
             for captain in [0, 1]:
                 for pfx in ['', 'sub-']:
@@ -288,7 +289,7 @@ def get_player_stats(score='total_points',
 def optimize(season=2014,
     tolerance=1e-6, budget=100., bench=.1,
     adjustments=None, score="total_points", solver="glpk",
-    username='', password='', source='espn'):
+    username='', password='', source='espn', threshold=1.):
     '''Configure and run KSP solver with given parameters. Returns openopt's
     solution object'''
 
@@ -296,7 +297,8 @@ def optimize(season=2014,
     print >>stderr, "Getting current stats from %s ..." % source
     players = get_player_stats(season=season,
         benchfrac=bench, score=score, adjustments=adjustments,
-        source=source, username=username, password=password)
+        source=source, username=username, password=password,
+        threshold=threshold)
     print >>stderr, "Finished getting stats."
 
     # Define constraints
@@ -419,6 +421,7 @@ if __name__=='__main__':
     username = ''
     password = ''
     source = 'espn'
+    threshold = 1.
 
 
     # Get CL params
@@ -444,6 +447,8 @@ if __name__=='__main__':
         help="Password (for official EPL site)")
     parser.add_argument('-w', '--source', type=str, default=source,
         help="Stats source website. ESPN and EPL are supported.")
+    parser.add_argument('-r', '--threshold', type=float, default=threshold,
+        help="Threshold for devaluing injured players at all")
 
     cli = parser.parse_args()
 
@@ -453,7 +458,8 @@ if __name__=='__main__':
     r, players = optimize(season=cli.season, tolerance=cli.tolerance,
         budget=cli.budget, bench=cli.bench, adjustments=cli.adjustments,
         score=cli.score, solver=cli.solver, source=cli.source,
-        username=cli.username, password=cli.password)
+        username=cli.username, password=cli.password,
+        threshold=cli.treshold)
 
     # Output raw solution from openopt solver
     print >>stderr, "Best solution found:"
