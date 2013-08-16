@@ -3,8 +3,7 @@ Thomas              Vermaelen           ARS       0.0                 Back injur
 Bacary              Sagna               ARS       0.75                Ankle injury - 75% chance of playing                        
 Nacho               Monreal             ARS       0.0                 Back injury - Expected back 01 Sep                          
 Theo                Walcott             ARS       0.75                Knee injury - 75% chance of playing                         
-Aaron               Ramsey              ARS       0.75                Ankle injury - 75% chance of playing                        
-Mikel               Arteta              ARS       0.5                 Thigh injury - 50% chance of playing                        
+Mikel               Arteta              ARS       0.0                 Thigh injury - Unknown return date                          
 Yao                 Gervinho            ARS       0.0                 Moved to Roma on 8/8                                        
 Vassiriki           Diaby               ARS       0.0                 Knee injury - Unknown return date                           
 Yaya                Sanogo              ARS       0.75                Hamstring injury - 75% chance of playing                    
@@ -13,7 +12,7 @@ Charles             N'Zogbia            AVL       0.0                 Achilles i
 Yacouba             Sylla               AVL       0.5                 Ankle injury - 50% chance of playing                        
 Andrew              Taylor              CAR       0.0                 Suspended until 25 Aug                                      
 Ben                 Nugent              CAR       0.0                 Joined Brentford until 5/1/1/4. - Expected back 06 Jan      
-Andreas             Cornelius           CAR       0.5                 Ankle injury - 50% chance of playing                        
+Andreas             Cornelius           CAR       0.75                Ankle injury - 75% chance of playing                        
 Jonathan            Parr                CRY       0.25                Lack of match fitness - 25% chance of playing               
 Yannick             Bolasie             CRY       0.0                 Hamstring injury - Unknown return date                      
 Jerome              Thomas              CRY       0.0                 Ankle injury - Expected back 31 Aug                         
@@ -31,7 +30,7 @@ Conor               Coady               LIV       0.0                 Joined She
 Jesus               Fernandez Saez      LIV       0.0                 Joined Almeria on season-long loan. - Expected back 12 May  
 Luis                Suarez              LIV       0.0                 Suspended - unknown return date                             
 Karim               Rekik               MCI       0.0                 Joined PSV on season-long loan.  - Expected back 12 May     
-Matija              Nastasic            MCI       0.0                 Ankle injury - Expected back 21 Sep                         
+Matija              Nastasic            MCI       0.0                 Ankle injury - Expected back 25 Aug                         
 Rafael              Da Silva            MUN       0.0                 Suspended - unknown return date                             
 Luis                Nani                MUN       0.5                 Knock - 50% chance of playing                               
 Michael             Carrick             MUN       0.75                Eye Injury - 75% chance of playing                          
@@ -65,9 +64,10 @@ Alan                Tate                SWA       0.0                 Joined Yeo
 Kyle                Bartley             SWA       0.0                 Joined Birmingham City on season-long loan - Expected back 12 May
 Kemy                Agustien            SWA       0.0                 Signed for Brighton on 1/8                                  
 Jonathan            de Guzman           SWA       0.0                 Head injury - Expected back 25 Aug                          
-Jan                 Vertonghen          TOT       0.5                 Ankle injury - 50% chance of playing                        
+Jan                 Vertonghen          TOT       0.75                Ankle injury - 75% chance of playing                        
 Clint               Dempsey             TOT       0.0                 Joined Seattle Sounders on 3/8                              
-Gareth              Bale                TOT       0.25                Foot injury - 25% chance of playing                         
+Gareth              Bale                TOT       0.0                 Foot injury - Expected back 25 Aug                          
+Lewis               Holtby              TOT       0.0                 Knee injury - Expected back 25 Aug                          
 George              Thorne              WBA       0.0                 Knee injury - Unknown return date                           
 James               Collins             WHU       0.75                Knee injury - 75% chance of playing                         
 George              McCartney           WHU       0.5                 Knee injury - 50% chance of playing                         

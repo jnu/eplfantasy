@@ -66,7 +66,7 @@ There will be a mess of status messages while the program is running.
 
 Ultimately the program will give you a team roster it's recommended (assuming an optimal solution was found). The roster will have 15 players: three forwards, five midfielders, five defenders, and two keepers. It will tell you who to start and who to sit, which implicitly tells you what formation to use. It also tells you who the captain should be and how much money this will cost you.
 
-Here's a sample output for the beginning of the 2013-14 season on the EPL official platform with a salary cap of £100 M (the default value).
+Here's a sample output for the beginning of the 2013-14 season on the EPL official platform with a salary cap of £100 M (the default value). Note this is run without any adjustments; Gareth Bale is currently out with a foot injury and might not actually be a great choice for a starter, and definitely not captain (at least for the first couple weeks).
 
     First Name     Last Name      Position       Starting      Capt. Club Salary 
     ---            ---            ---            ---            ---  ---  ---    
