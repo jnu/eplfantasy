@@ -3,10 +3,36 @@ EPL Fantasy Roster Optimizer
 
 ### Purpose
 
-This application attempts to optimize the roster of a fantasy English Premier League team on ESPN's fantasy platform.
+This application attempts to optimize the roster of a fantasy English Premier League team.
+
+### Supported fantasy platforms
+
+The supported fantasy platforms are currently ESPN's and the official EPL site's.
+
+The official EPL site provides information on injuries, suspensions, and other reasons why a player might not be playing. Even if you are interested in ESPN's platform, you should still grab the EPL data first to get this information about benched players:
+
+    $ python optimize_roster.py --source premierleague --adjustments adjustments.txt --nosolve
+    $ python optimize_roster.py --source espn --adjustments adjustments.txt
+
+This will store the injuries from the EPL site in `adjustments.txt` but will not try to optimize the EPL site's fantasy team. The second command will take the adjustments from that text file and use them to devalue players in ESPN's fantasy game, then proceed to optimize for ESPN's game.
 
 ### Requirements
+
+#### KSP Solving
+
 * [OpenOpt](http://openopt.org/), with `pip install openopt`
+
+
+#### Remote stat parsing
+* [BeautifulSoup](http://www.crummy.com/software/BeautifulSoup/bs4/doc/) is used for parsing the stats from remote endpoints. Get it with `pip install beautifulsoup4`.
+
+#### Speed-ups
+
+You can use openopt's `interalg` to run the program with the solver included with `openopt`. Unfortunately this 1) does not guarantee you an optimal solution, and 2) takes so long it will make you cry.
+
+The program will look for GLPK to do the heavy mathing instead of interalg. It can be a pain to install, but it'll save possibly hours of computation and aggravation.
+
+Follow these steps to get GLPK working on *nix:
 
 * [GLPK \(4.48\)](http://www.gnu.org/software/glpk/). Build with GMP support enabledby running `./configure --with-gmp` first.
 
@@ -14,23 +40,25 @@ This application attempts to optimize the roster of a fantasy English Premier Le
 
 * [Python-GLPK](http://www.dcc.fc.up.pt/~jpp/code/python-glpk/). To build this from source you will need `PLY` via `pip install ply`, then [SWIG](http://www.swig.org/download.html). Then you should extract the Python-GLPK source and edit `src/swig/Makefile` so that the first line reads `PYVERS := "python2.7"` (or your version of Python2). Then run `make` in the `src/` directory. Ignore the errors that appear. Now copy `src/swig/glpkpi.py` to `src/python/glpkpi.py`. Finally, run `python src/setup.py install`.
 
-* [BeautifulSoup](http://www.crummy.com/software/BeautifulSoup/bs4/doc/) is used for parsing the stats from ESPN. Get it with `pip install beautifulsoup4`.
-
 Note you may need to run every install command as `sudo`.
 
 ### Usage
 
-Run `optimize_roster.py` on the terminal in \*nix without any additional arguments to get a basic team.
+Run `optimize_roster.py` on the terminal in \*nix without any additional arguments to get a basic optimized team on the default platform (ESPN).
 
-See `optimize_roster.py -h` for the specific parameters which may be adjusted on the command line.
+Run `optimize_roster.py --source premierleague` to switch to EPL's fantasy platform.
+
+See `optimize_roster.py -h` for the host of parameters that can be used to tweak the optimizer.
 
 ### Algorithm
 
 The optimization problem is a sort of knapsack problem with a slew of constraints. Check the source for the specific constraints involved.
 
-The value of each person is basically their average fantasy points per ESPN's stats. Fantasy points are doubled for the player you select as captain, and this is accounted for in searching for an optimal solution.
+The value of each person is basically their total fantasy points per the fantasy game's stats. Fantasy points are doubled for the player you select as captain, and this is accounted for in searching for an optimal solution.
 
 In addition, it is generally the case that bench players do not earn you many more points. Of course, they could, but there is no way to know that now. The program accounts for this by considering the fantasy points from a bench player as a fraction of their average points. You can adjust what fraction this should be. By default it is 1/10. A smaller fraction will mean less money is spent on your substitutes.
+
+You can update most all parameters on the command line, including how a player's worth is calculated, how much they should be devalued for injuries, the total team budget, and more.
 
 ### Output
 
@@ -38,36 +66,38 @@ There will be a mess of status messages while the program is running.
 
 Ultimately the program will give you a team roster it's recommended (assuming an optimal solution was found). The roster will have 15 players: three forwards, five midfielders, five defenders, and two keepers. It will tell you who to start and who to sit, which implicitly tells you what formation to use. It also tells you who the captain should be and how much money this will cost you.
 
-Here's a sample output for the beginning of the 2013-14 season with a salary cap of £80 M. (ESPN by default actually gives you £100 M to play with).
+Here's a sample output for the beginning of the 2013-14 season on the EPL official platform with a salary cap of £100 M (the default value).
 
     First Name     Last Name      Position       Starting      Capt. Club Salary 
     ---            ---            ---            ---            ---  ---  ---    
-    Rickie         Lambert        forward        starter             SOU  6.5    
-    Billy          Sharp          forward        sub                 SOU  4.2    
-    Kwesi          Appiah         forward        sub                 CRP  4.1    
-    Michu                         midfielder     starter             SWC  7.7    
-    Moussa         Sissoko        midfielder     starter             NEW  6.3    
-    Nick           Powell         midfielder     starter             MUN  5.1    
-    Jordan         Ibe            midfielder     starter             LIV  4.9    
-    Maurice        Edu            midfielder     sub                 STC  4.1    
-    John           Terry          defender       starter             CHL  6.8    
-    Nacho          Monreal        defender       starter             ARS  6.5    
-    Sebastien      Bassong        defender       starter             NOR  5.5    
-    Alexander      Büttner        defender       starter         X   MUN  5.0    
-    Steven         Whittaker      defender       starter             NOR  4.7    
-    Mark           Schwarzer      keeper         starter             CHL  4.5    
-    David          Stockdale      keeper         sub                 FUL  4.1    
+    Dimitar        Berbatov       forward        starter             FUL  7.5    
+    Rickie         Lambert        forward        starter             SOU  7.5    
+    Luke           Moore          forward        sub                 SWA  4.5    
+    Santi          Cazorla        midfielder     starter             ARS  10.0   
+    Robert         Snodgrass      midfielder     starter             NOR  6.5    
+    Jack           Colback        midfielder     sub                 SUN  4.5    
+    Miguel         Michu          midfielder     starter             SWA  9.0    
+    Gareth         Bale           midfielder     starter         X   TOT  12.0   
+    Per            Mertesacker    defender       starter             ARS  5.5    
+    Nathan         Baker          defender       sub                 AVL  4.0    
+    Leighton       Baines         defender       starter             EVE  7.5    
+    Glen           Johnson        defender       starter             LIV  6.0    
+    Patrice        Evra           defender       starter             MUN  6.5    
+    Mark           Schwarzer      keeper         starter             CHE  5.0    
+    Kelvin         Davis          keeper         sub                 SOU  4.0 
 
-    Total Cost: £ 80.0 M
+    Total Cost:     £ 100.0 M
     Under budget:   £ 0.0 M
 
 
 
-### Important note about remote stats
+### Important notes about remote stats
 
-The script accesses the same endpoint on ESPN's servers that they use to display the stats in the fantasy sports website. This is liable to change without notice, no guarantees it will work for ever. Additionally, it may not be acceptable to access this endpoint and manipulate their data without their consent.
+* For the EPL official site you will need your own account. You will be prompted for your username and password when you try to access their stats, or you may present these parameters on the command line.
 
-Four requests are made to the ESPN server every time the script is run. Do not use remote data for development purposes.
+* The use of statistics programmatically retrieved from the remote servers may be in violation of their terms of use. Please comply with these sites' terms of use.
+
+* It is bad form to make unnecessary programmatic requests to websites without their explicit permission. Your IP may be filtered or your account suspended because of your actions in this respect. By design the program will make four requests to ESPN or at least three requests to EPL when you run it (depending on how many attempts you need to log on properly). Be conscious of how many requests you are making.
 
 ## Credits
 All things in this repo are by Joe Nudell. See 3rd party libraries for their own respective authors and contributors, of which there are many.
