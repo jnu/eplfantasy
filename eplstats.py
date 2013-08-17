@@ -35,6 +35,7 @@ Player instances definitely have the following attributes:
  * club             (club for which player plays)
  * cost             (salary for player)
  * ownership        (percent of people who chose this player, as decimal)
+ * position
 
 
 Players from ESPN source in addition have the following fields:
@@ -521,6 +522,7 @@ class Downloader(object):
         than the current one, 2014.'''
         base_url = self._espn_data['url']
         _pos_id_map = self._espn_data['pos_id_map']
+        pos_lbl = position
 
         position = _pos_id_map.get(position, None)
 
@@ -548,6 +550,7 @@ class Downloader(object):
             np.rank = toInt(get_by_class(row, 'td', 'st-frnk'))
             np.club = get_by_class(row, 'span', 'player_team')
             np.cost = toFloat(get_by_class(row, 'td', 'player_cost'))
+            np.position = pos_lbl
 
             _ops = [f.strip(")") for f
                 in get_by_class(row, 'span', 'player_opp').split("(")]
@@ -560,7 +563,7 @@ class Downloader(object):
             except:
                 np.own_change = 0.
 
-            np.ownership = toFloat(soup.find('td',
+            np.ownership = toFloat(row.find('td',
                 attrs={'class':'st-frnk'})\
                 .find_next('td')\
                 .text.encode('utf8')) / 100.
