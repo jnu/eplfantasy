@@ -140,6 +140,7 @@ def get_player_stats(source, username=None, password=None):
 
 
 
+
 if __name__=='__main__':
     '''Find the uniqueness of two teams.'''
 
@@ -180,7 +181,8 @@ if __name__=='__main__':
 
     # Run stats downloader
     print >>stderr, "Fetching stats from %s ..." % cli.source
-    players = get_player_stats(source, username=username, password=password)
+    players = get_player_stats(cli.source,
+        username=cli.username, password=cli.password)
     print >>stderr, "Done."
 
     # Get team rosters
