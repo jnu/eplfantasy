@@ -44,7 +44,6 @@ import codecs
 roster_line_format= u"{:<15}{:<15}{:<15}{:<14}{:^6}{:<5}{:<7}"
 
 
-
 class NS(object):
     pass
 
