@@ -105,6 +105,8 @@ Here's a sample output for the beginning of the 2013-14 season on the EPL offici
 
 * For the EPL official site you will need your own account. You will be prompted for your username and password when you try to access their stats, or you may present these parameters on the command line.
 
+* The EPL access point currently only works while you haven't selected a team yet. Once you select a team on the account you're connecting through, the program will not be able to gather new data from the site.
+
 * The use of statistics programmatically retrieved from the remote servers may be in violation of their terms of use. Please comply with these sites' terms of use.
 
 * It is bad form to make unnecessary programmatic requests to websites without their explicit permission. Your IP may be filtered or your account suspended because of your actions in this respect. By design the program will make four requests to ESPN or at least three requests to EPL when you run it (depending on how many attempts you need to log on properly). Be conscious of how many requests you are making.
