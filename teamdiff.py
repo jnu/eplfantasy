@@ -74,7 +74,7 @@ def read_team_file(fh):
 
 
 
-def team_similarity(roster1, roster1, players, freqfield='popularity'):
+def team_similarity(roster1, roster1, players, freqfield='ownership'):
     '''Compare the rosters of two teams using statistics provided in the list
     `players`. Comparison is cosine similarity of TF-IDF vectors created from
     these rosters. Return value is in [0, 1]. A value of 1 means that the 
@@ -198,11 +198,6 @@ if __name__=='__main__':
     print
     print "Team similarity:", similarity
     print
-
-
-
-
-
 
 
 
