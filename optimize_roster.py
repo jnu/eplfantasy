@@ -373,7 +373,7 @@ def optimize(season=2014,
 
 
 
-def print_results(r, players, fh=stdout, print_cost=True):
+def print_results(r, players, fh=stdout, print_cost=True, budget=100.):
     '''Take results object and players pool and print human-readable results'''
     names = r.xf
 
@@ -517,7 +517,7 @@ if __name__=='__main__':
             with codecs.open(cli.out, "w", 'utf8') as fh:
                 print_results(r, players, fh=fh, print_cost=False)
         # Print results to stdout
-        print_results(r, players)
+        print_results(r, players, budget=cli.budget)
     else:
         print >>stderr, "Players stats loaded in `players` variable"
     
