@@ -114,13 +114,13 @@ def player_in_roster(player, roster,
     Returns the player dict if found in roster, otherwise None.'''
     fname = sanitize(player.first_name)
     lname = sanitize(player.last_name)
-    club = sanitize(player.club)
+    pclub = sanitize(player.club)
 
     for _aplayer in roster:
         # Note : Right now the heuristics used for matching are *good enough*,
         # but they could be better.
 
-        if sanitize(_aplayer[club]) == club:
+        if sanitize(_aplayer[club]) == pclub:
             # Correct club
             _aln = sanitize(_aplayer[last_name])
             _afn = sanitize(_aplayer[first_name])
