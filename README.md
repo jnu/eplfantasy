@@ -50,6 +50,16 @@ Run `optimize_roster.py --source premierleague` to switch to EPL's fantasy platf
 
 See `optimize_roster.py -h` for the host of parameters that can be used to tweak the optimizer.
 
+#### teamdiff
+
+I also include the utility `teamdiff.py` which computes the similarity between teams. It currently uses a method similar to how cosine similarity is computed between documents using TF-IDF word frequences. Use it by providing two team rosters (as generated using `python optimize_roster.py ... --out roster.txt`) and the remote source of player stats as you would do when running `optimize_roster.py`.
+
+Example:
+
+    $ python teamdiff.py roster1.txt roster2.txt --source pl --username your@email.com --password password
+
+The result will be a number in [0, 1] that is the cosine of the angle between the team vectors, incorporating the frequency that each player was chosen across the entire fantasy league team owners.
+
 ### Algorithm
 
 The optimization problem is a sort of knapsack problem with a slew of constraints. Check the source for the specific constraints involved.
