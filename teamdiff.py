@@ -139,6 +139,22 @@ def get_player_stats(source, username=None, password=None):
 
 
 
+def score_team(roster, players, field="total_points"):
+    '''Calculate fantasy score of team'''
+    score = 0.
+
+    for i, player in enumerate(players):
+        in_team = optr.player_in_roster(player, roster) is not None
+
+        if in_team:
+            score += getattr(player, field)
+
+    return score
+
+
+
+
+
 
 
 if __name__=='__main__':
@@ -149,6 +165,7 @@ if __name__=='__main__':
     username = ''
     password = ''
     source = 'espn'
+    score = 'total_points'
 
     parser = argparse.ArgumentParser(description=__doc__)
 
@@ -167,6 +184,8 @@ if __name__=='__main__':
         help="Password (for official EPL site)")
     parser.add_argument('-w', '--source', type=str, default=source,
         help="Stats source website. ESPN and EPL are supported.")
+    parser.add_argument('-s', '--score', type=str, default=score,
+        help="Attribute to calculate expected team score from")
 
     cli = parser.parse_args()
 
@@ -201,11 +220,23 @@ if __name__=='__main__':
     similarity = team_similarity(roster1, roster2, players)
     print >>stderr, "done."
 
+    # Calculate fantasy score expected by teams
+    print >>stderr, "Calculating expected scores ...",
+    score1 = score_team(roster1, players, field=cli.score)
+    score2 = score_team(roster2, players, field=cli.score)
+    print >>stderr, "done."
+
 
     # Display result
     print
     print "Team similarity:", similarity
     print
+
+    print "Expected season fantasy scores:"
+    print " Team 1", "\t", score1
+    print " Team 2", "\t", score2
+    print 
+
 
 
 
