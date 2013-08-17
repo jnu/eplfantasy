@@ -37,6 +37,7 @@ import eplstats
 import argparse
 import os
 import re
+import codecs
 
 
 # globals
@@ -419,10 +420,10 @@ def print_results(r, players, fh=stdout, print_cost=True):
         under_budget = 0.
 
     if print_cost:
-        print >>fh, 
+        print >>fh, ""
         print >>fh, u"Total Cost:\t£", total_cost, "M"
         print >>fh, u"Under budget:\t£", under_budget, "M"
-        print >>fh, 
+        print >>fh, ""
 
 
 
@@ -511,9 +512,9 @@ if __name__=='__main__':
         # Print tidied-up results
         os.system('clear')
 
-        if outfilename is not None:
+        if cli.out is not None:
             # Write results to out file as necessary.
-            with open(outfilename, "w") as fh:
+            with codecs.open(cli.out, "w", 'utf8') as fh:
                 print_results(r, players, fh=fh, print_cost=False)
         # Print results to stdout
         print_results(r, players)
