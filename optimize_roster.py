@@ -165,10 +165,10 @@ def get_adjustment(player, adjustments, threshold=1, silent=False):
     if not silent and adj!=1.:
         print >>stderr, " * Ignoring %s %s (%s) ~ %s" % \
         (
-            _aplayer['first_name'],
-            _aplayer['last_name'],
-            _aplayer['club'],
-            _aplayer['news']
+            adj_player['first_name'],
+            adj_player['last_name'],
+            adj_player['club'],
+            adj_player['news']
         )
 
     return adj
