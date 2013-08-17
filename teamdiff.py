@@ -16,6 +16,7 @@ import numpy as np
 # stdlib
 import os
 import re
+import codecs
 import argparse
 from sys import stderr, exit
 
@@ -23,7 +24,7 @@ from sys import stderr, exit
 
 def _get_line_slices(formatstr):
     '''Get the fixed-width line break points from a format string'''
-    ms = re.findall(r'\{.+\d+?\}', formatstr)
+    ms = re.findall(r'\{.+?(\d+?)\}', formatstr)
 
     return [int(b) for b in ms]
 
@@ -34,7 +35,7 @@ def _slice_line(line, points):
 
     i = 0
     for point in points:
-        slices.append(line[i:point].strip())
+        slices.append(line[i:i+point].strip())
         i += point
 
     return slices
@@ -47,16 +48,19 @@ def read_team_file(fh):
     roster = []
     slice_points = _get_line_slices(optr.roster_line_format)
 
-    for i, line in enumerate(fh.readlines())
+    for i, line in enumerate(fh.readlines()):
         if i == 0 :
             # Header row: read as keys
             keys = _slice_line(line, slice_points)
 
             # Make header names easier to work with
             keys = [re.sub(r'\s+', '_', k.lower()) for k in keys]
+            continue
+
         elif i == 1:
             # These are just delimeters
             continue
+
         else:
             # Interpret content line
             slices = _slice_line(line, slice_points)
@@ -74,7 +78,7 @@ def read_team_file(fh):
 
 
 
-def team_similarity(roster1, roster1, players, freqfield='ownership'):
+def team_similarity(roster1, roster2, players, freqfield='ownership'):
     '''Compare the rosters of two teams using statistics provided in the list
     `players`. Comparison is cosine similarity of TF-IDF vectors created from
     these rosters. Return value is in [0, 1]. A value of 1 means that the 
@@ -84,12 +88,11 @@ def team_similarity(roster1, roster1, players, freqfield='ownership'):
     v1 = np.zeros(len(players))
     v2 = np.zeros(len(players))
 
-
     for i, player in enumerate(players):
         # Calculate inverse frequency of player selection for all players
         # selected in both teams. Same idea as TF-IDF in document similarity.
-        in_team_one = player_in_roster(player, roster1) is not None
-        in_team_two = player_in_roster(player, roster2) is not None
+        in_team_one = optr.player_in_roster(player, roster1) is not None
+        in_team_two = optr.player_in_roster(player, roster2) is not None
 
         if not in_team_one and not in_team_two:
             continue
@@ -107,7 +110,7 @@ def team_similarity(roster1, roster1, players, freqfield='ownership'):
     # TODO - verify that there are 15 elements in both teams?
 
     # Calculate cos(θ) between vectors
-    cos = np.linalg.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+    cos = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
     return cos
 
@@ -149,9 +152,9 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(description=__doc__)
 
     # Required positionals:
-    parser.add_argument('path_to_team1', type=str, nargs=1, required=True,
+    parser.add_argument('path_to_team1', type=str, nargs=1,
         help="Path to a team roster")
-    parser.add_argument('path_to_team2', type=str, nargs=1, required=True,
+    parser.add_argument('path_to_team2', type=str, nargs=1,
         help="Path to another team roster")
 
     # Optional arguments
@@ -166,8 +169,11 @@ if __name__=='__main__':
 
     cli = parser.parse_args()
 
+    fn1 = cli.path_to_team1[0]
+    fn2 = cli.path_to_team2[0]
+
     # Make sure paths to files provided exist
-    for fn in [cli.path_to_team1, cli.path_to_team2]:
+    for fn in [fn1, fn2]:
         if not os.path.exists(fn):
             raise IOError("Can't find %s" % fn)
 
@@ -179,10 +185,10 @@ if __name__=='__main__':
 
     # Get team rosters
     print >>stderr, "Processing team files ...",
-    with open(cli.path_to_team1, 'r') as fh:
+    with codecs.open(fn1, 'r', 'utf8') as fh:
         roster1 = read_team_file(fh)
 
-    with open(cli.path_to_team2, 'r') as fh:
+    with codecs.open(fn2, 'r', 'utf8') as fh:
         roster2 = read_team_file(fh)
 
     print >>stderr, "done."
