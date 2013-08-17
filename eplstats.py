@@ -214,7 +214,7 @@ class Downloader(object):
                 lambda c: c/100. if c is not None else 1.,
             'club' : \
                 lambda c: c,
-            'ownership' : c/100.
+            'ownership' : lambda c: c/100.
         }
     }
 
