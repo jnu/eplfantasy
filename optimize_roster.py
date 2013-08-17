@@ -45,6 +45,10 @@ roster_line_format= u"{:<15}{:<15}{:<15}{:<14}{:^6}{:<5}{:<7}"
 
 
 
+class NS(object):
+    pass
+
+
 def get_injured_list(fn, has_header=True):
     if not os.path.exists(fn):
         raise IOError("Injured list file `%s` does not exist" % fn)
@@ -180,7 +184,8 @@ def get_adjustment(player, adjustments, threshold=1, silent=False):
 
 def get_player_stats(score='total_points',
     season=2014, benchfrac=.1, adjustments=None,
-    source='espn', username='', password='', threshold=1.):
+    source='espn', username='', password='', threshold=1.,
+    captain=2.0):
     '''Get all the stats from ESPN.com and format them in the manner
     expected by the optimizer.
     Params:
@@ -190,6 +195,7 @@ def get_player_stats(score='total_points',
      adjustments Externally defined adjustments to player worth (injuries etc.)
     '''
     players = []
+    player_objs = []
 
     # Keyword arguments are named after command line arguments.
     # adjustments really refers to the file name of the adjustments file
@@ -208,6 +214,7 @@ def get_player_stats(score='total_points',
         print >>stderr, "  Getting stats about %s ..." % position
         _players = downloader.get(position,
             source=source, season=season, adjustments=adjfile)
+        player_objs += _players
 
 
         # Get adjustments, if a file is given
@@ -249,8 +256,8 @@ def get_player_stats(score='total_points',
                         points *= benchfrac
 
                     if captain:
-                        # Captains earn double points
-                        points *= 2.
+                        # Captains earn double points by default
+                        points *= captain
 
                     # Factor in external adjustments (default is just 1.0)
                     points *= adj_factor
@@ -296,7 +303,7 @@ def get_player_stats(score='total_points',
         for i in all_ids:
             player['id%d' % i] = float(player['pid']==i)
 
-    return players
+    return (players, player_objs)
 
 
 
@@ -305,20 +312,21 @@ def get_player_stats(score='total_points',
 def optimize(season=2014,
     tolerance=1e-6, budget=100., bench=.1,
     adjustments=None, score="total_points", solver="glpk",
-    username='', password='', source='espn', threshold=1., nosolve=False):
+    username='', password='', source='espn', threshold=1., nosolve=False,
+    captain=2.0):
     '''Configure and run KSP solver with given parameters. Returns openopt's
     solution object'''
 
     # Get stats
     print >>stderr, "Getting current stats from %s ..." % source
-    players = get_player_stats(season=season,
+    players, player_objs = get_player_stats(season=season,
         benchfrac=bench, score=score, adjustments=adjustments,
         source=source, username=username, password=password,
-        threshold=threshold)
+        threshold=threshold, captain=captain)
     print >>stderr, "Finished getting stats."
 
     if nosolve:
-        return None, players
+        return None, player_objs
 
     # Define constraints
     print >>stderr, "Defining constraints ...",
@@ -368,6 +376,67 @@ def optimize(season=2014,
     r = p.solve(solver, iprint=1, nProc=2)
 
     return (r, players)
+
+
+
+
+
+def build_popular_team(players):
+    '''Make a team of 15 from the most popular players in the pool'''
+    p_array = [{
+        'name' : "%s %s (%d)" % (player.first_name, player.last_name, i),
+        'fname' : player.first_name,
+        'lname' : player.last_name,
+        'position' : player.position,
+        'bench' : 'N/A',
+        'captain' : 'N/A',
+        'club' : player.club,
+        'cost' : player.cost,
+        'ownership' : player.ownership,
+        'uid' : i
+    } for i, player in enumerate(players)]
+
+    keepers = []
+    defenders = []
+    midfielders = []
+    forwards = []
+
+    for p in p_array:
+        if p['position']=='keepers':
+            keepers.append(p)
+        elif p['position']=='defenders':
+            defenders.append(p)
+        elif p['position']=='midfielders':
+            midfielders.append(p)
+        elif p['position']=='forwards':
+            forwards.append(p)
+        else:
+            print >>stderr, "Warning: No position of defined on", p
+
+
+
+    print [keeper.ownership for keeper in players]
+
+    sort = lambda X: sorted(X, key=lambda k: k['ownership'])
+
+    keepers = sort(keepers)
+    defenders = sort(defenders)
+    midfielders = sort(midfielders)
+    forwards = sort(forwards)
+
+    
+
+    team = keepers[-2:] + defenders[-5:] + midfielders[-5:] + forwards[-3:]
+
+    r = NS()
+    r.xf = [member['name'] for member in team]
+
+    return r, p_array
+
+
+
+
+
 
 
 
@@ -446,6 +515,8 @@ if __name__=='__main__':
     threshold = 1.
     nosolve = False
     outfilename = None
+    captain = 2.0
+    popular = False
 
 
     # Get CL params
@@ -477,6 +548,10 @@ if __name__=='__main__':
         help="Don't execute the solver")
     parser.add_argument('-o', '--out', type=str, default=outfilename,
         help="File to write team roster to")
+    parser.add_argument('-c', '--captain', type=float, default=captain,
+        help="Bonus for being captain")
+    parser.add_argument('-P', '--popular', action="store_true",
+        help="Create a team of the most popular players")
 
 
     cli = parser.parse_args()
@@ -496,17 +571,25 @@ if __name__=='__main__':
         print >>stderr, "Warning: interalg will take a long-ass time to solve this problem. Use GLPK if you can."
 
 
+    if cli.popular:
+        # Can't make popular team with optimizer. Doesn't make sense.
+        cli.nosolve = True
+
 
     # Run optimizer
     r, players = optimize(season=cli.season, tolerance=cli.tolerance,
         budget=cli.budget, bench=cli.bench, adjustments=cli.adjustments,
         score=cli.score, solver=solver_lbl, source=cli.source,
         username=cli.username, password=cli.password,
-        threshold=cli.threshold, nosolve=cli.nosolve)
+        threshold=cli.threshold, nosolve=cli.nosolve, captain=cli.captain)
+
+    if cli.popular:
+        # Make a popular team
+        r, players = build_popular_team(players)
 
     # Output raw solution from openopt solver
     if r is not None:
-        print >>stderr, "Best solution found:"
+        print >>stderr, "Solution found:"
         pprint(r.xf)
 
         # Print tidied-up results
