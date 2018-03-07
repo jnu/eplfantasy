@@ -192,7 +192,7 @@ class Downloader(object):
     _pl_data = {
         'login_url' : \
     'https://users.premierleague.com/PremierUser/j_spring_security_check',
-        'url' : 'http://fantasy.premierleague.com/squad-selection/',
+        'url' : 'https://fantasy.premierleague.com/a/squad/selection',
         'aliases' : {
             'now_cost' : 'cost',
             'second_name': 'last_name',
